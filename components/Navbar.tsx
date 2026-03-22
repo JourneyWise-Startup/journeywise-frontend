@@ -32,6 +32,11 @@ export default function Navbar() {
                     // If we have an avatar and it's different from context, update context
                     if (data && data.avatar && data.avatar !== user.avatar) {
                         updateUser({ ...user, avatar: data.avatar });
+                    } else if (data && !data.avatar && user.avatar) {
+                        // If avatar was removed from DB, clear it from context
+                        const updated = { ...user };
+                        delete updated.avatar;
+                        updateUser(updated);
                     }
                 })
                 .catch(err => console.error("Failed to fetch profile for navbar", err));

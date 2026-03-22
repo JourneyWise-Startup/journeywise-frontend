@@ -99,9 +99,14 @@ export default function ProfilePage() {
                 const data = await res.json();
                 if (data) {
                     setFormData(prev => ({ ...prev, ...data }));
-                    // Check if avatar needs sync
+                    // Check if avatar needs sync (either updated or removed)
                     if (data.avatar && user && data.avatar !== user.avatar) {
                         updateUser({ ...user, avatar: data.avatar });
+                    } else if (!data.avatar && user && user.avatar) {
+                        const updated = { ...user };
+                        delete updated.avatar;
+                        updateUser(updated);
+                        setFormData(prev => ({ ...prev, avatar: "" }));
                     }
                 }
             }

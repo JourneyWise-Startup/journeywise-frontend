@@ -29,11 +29,14 @@ export default function InterviewWarRoom() {
                 if (!res.ok) throw new Error('Failed to fetch');
                 const data = await res.json();
                 setPrep(data);
-                setLoading(false);
 
                 // Poll if still generating
                 if (data.status === 'GENERATING') {
+                    // Keep loading state TRUE while polling
                     setTimeout(fetchPrep, 3000);
+                } else {
+                    // Turn off loading once it's READY or FAILED
+                    setLoading(false);
                 }
             } catch (err: any) {
                 console.error(err);

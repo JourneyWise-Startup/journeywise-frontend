@@ -331,12 +331,27 @@ export function WarRoomContent({ prep, token, prepId }: any) {
                                 {activeQuestion === idx && (
                                     <CardContent className="space-y-4 border-t pt-4">
                                         <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200">
-                                            <p className="font-semibold text-green-900 dark:text-green-300 text-sm mb-2">✓ Good Answer</p>
-                                            <p className="text-sm text-green-800 dark:text-green-200">{q.goodAnswer}</p>
+                                            <p className="font-semibold text-green-900 dark:text-green-300 text-sm mb-2">✓ Good Answer Strategy</p>
+                                            <div className="text-sm text-green-800 dark:text-green-200 space-y-2">
+                                                {typeof q.goodAnswer === 'string' ? (
+                                                    <p>{q.goodAnswer}</p>
+                                                ) : (
+                                                    <>
+                                                        {q.goodAnswer?.framework && <p><strong>Framework:</strong> {q.goodAnswer.framework}</p>}
+                                                        {q.goodAnswer?.keyPoints && <p><strong>Key Points:</strong> {q.goodAnswer.keyPoints.join(', ')}</p>}
+                                                        {q.goodAnswer?.sampleScript && (
+                                                            <div className="mt-3 p-3 bg-white/50 dark:bg-black/20 rounded border border-green-200/50 italic text-green-900 dark:text-green-100">
+                                                                "{q.goodAnswer.sampleScript}"
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200">
                                             <p className="font-semibold text-red-900 dark:text-red-300 text-sm mb-2">✗ Avoid This</p>
                                             <p className="text-sm text-red-800 dark:text-red-200">{q.badAnswer}</p>
+                                            {q.improvementTip && <p className="text-sm mt-2 font-medium text-red-900 dark:text-red-300">💡 Tip: {q.improvementTip}</p>}
                                         </div>
                                         <div className="text-sm text-muted-foreground italic border-t pt-3">
                                             <strong>What they're testing:</strong> {q.whatTestedFor}
@@ -353,19 +368,28 @@ export function WarRoomContent({ prep, token, prepId }: any) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Card>
                             <CardHeader>
-                                <CardTitle className="text-sm">Company Overview</CardTitle>
+                                <CardTitle className="text-sm">Culture Decoder</CardTitle>
                             </CardHeader>
                             <CardContent className="text-sm text-muted-foreground">
-                                {company.overview}
+                                {company.cultureDecoder || company.overview || 'No culture data generated.'}
                             </CardContent>
                         </Card>
 
                         <Card>
                             <CardHeader>
-                                <CardTitle className="text-sm">Tech Stack</CardTitle>
+                                <CardTitle className="text-sm">Interview Style & Expectations</CardTitle>
+                            </CardHeader>
+                            <CardContent className="text-sm text-muted-foreground">
+                                {company.interviewStyle || company.whatTheyLookFor || 'No style data generated.'}
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-sm">Hiring Priorities</CardTitle>
                             </CardHeader>
                             <CardContent className="flex flex-wrap gap-2">
-                                {company.techStack?.map((tech: string, i: number) => (
+                                {(company.hiringPriorities || company.techStack || []).map((tech: string, i: number) => (
                                     <Badge key={i} variant="secondary">{tech}</Badge>
                                 ))}
                             </CardContent>
@@ -373,20 +397,25 @@ export function WarRoomContent({ prep, token, prepId }: any) {
 
                         <Card>
                             <CardHeader>
-                                <CardTitle className="text-sm">What They're Looking For</CardTitle>
-                            </CardHeader>
-                            <CardContent className="text-sm text-muted-foreground">
-                                {company.whatTheyLookFor}
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-sm">Company Size & Stage</CardTitle>
+                                <CardTitle className="text-sm">Key Values & Insider Tips</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-sm font-semibold mb-1">{company.size}</p>
-                                <p className="text-xs text-muted-foreground mb-2">{company.hiringPatterns}</p>
+                                {(company.keyValues && company.keyValues.length > 0) && (
+                                    <div className="mb-3">
+                                        <p className="text-xs font-semibold mb-1 uppercase tracking-wider text-muted-foreground">Values</p>
+                                        <ul className="list-disc pl-4 text-sm space-y-1">
+                                            {company.keyValues.map((v: string, i: number) => <li key={i}>{v}</li>)}
+                                        </ul>
+                                    </div>
+                                )}
+                                {(company.insiderTips && company.insiderTips.length > 0) && (
+                                    <div>
+                                        <p className="text-xs font-semibold mb-1 uppercase tracking-wider text-muted-foreground mt-2">Insider Tips</p>
+                                        <ul className="list-disc pl-4 text-sm space-y-1 text-cyan-700 dark:text-cyan-400">
+                                            {company.insiderTips.map((t: string, i: number) => <li key={i}>{t}</li>)}
+                                        </ul>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>
@@ -401,37 +430,103 @@ export function WarRoomContent({ prep, token, prepId }: any) {
                 <TabsContent value="strategy" className="space-y-4">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Your Introduction (30 seconds)</CardTitle>
+                            <CardTitle>Your Introduction (Elevator Pitch)</CardTitle>
                         </CardHeader>
-                        <CardContent className="text-sm whitespace-pre-wrap font-mono bg-muted/50 p-4 rounded">
-                            {strategy.introduction}
+                        <CardContent className="text-sm whitespace-pre-wrap font-mono bg-muted/50 p-4 rounded border-l-4 border-cyan-500">
+                            {strategy.elevatorPitch || strategy.introduction || 'Pitch data unavailable.'}
+                        </CardContent>
+                    </Card>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+                                    <CheckCircle2 className="w-5 h-5" /> Strengths & Do's
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4 text-sm">
+                                {strategy.strengthsToLeverage && (
+                                    <div>
+                                        <p className="font-semibold mb-2">Strengths to Leverage:</p>
+                                        <ul className="list-disc pl-5 space-y-1">
+                                            {strategy.strengthsToLeverage.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                                        </ul>
+                                    </div>
+                                )}
+                                {strategy.dos && (
+                                    <div>
+                                        <p className="font-semibold mb-2 mt-4 text-emerald-700">Definitely Do:</p>
+                                        <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                                            {strategy.dos.map((d: string, i: number) => <li key={i}>{d}</li>)}
+                                        </ul>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-red-600 dark:text-red-400 flex items-center gap-2">
+                                    <AlertCircle className="w-5 h-5" /> Weaknesses & Don'ts
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4 text-sm">
+                                {strategy.weaknessesToNeutralize && (
+                                    <div>
+                                        <p className="font-semibold mb-2">Weaknesses to Neutralize:</p>
+                                        <ul className="list-disc pl-5 space-y-1">
+                                            {strategy.weaknessesToNeutralize.map((w: string, i: number) => <li key={i}>{w}</li>)}
+                                        </ul>
+                                    </div>
+                                )}
+                                {strategy.donts && (
+                                    <div>
+                                        <p className="font-semibold mb-2 mt-4 text-red-700">Definitely Avoid:</p>
+                                        <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                                            {strategy.donts.map((d: string, i: number) => <li key={i}>{d}</li>)}
+                                        </ul>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Questions YOU Should Ask</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ul className="space-y-2">
+                                {(strategy.questionsToAskInterviewer || strategy.questionsToAsk || []).map((q: string, i: number) => (
+                                    <li key={i} className="flex items-start gap-2 text-sm">
+                                        <span className="text-cyan-600 dark:text-cyan-400 font-bold">Q:</span>
+                                        <span>{q}</span>
+                                    </li>
+                                ))}
+                                {!(strategy.questionsToAskInterviewer || strategy.questionsToAsk) && (
+                                    <p className="text-sm text-muted-foreground">No questions generated.</p>
+                                )}
+                            </ul>
                         </CardContent>
                     </Card>
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Why Should We Hire You?</CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-sm whitespace-pre-wrap">
-                            {strategy.whyHireYou}
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-lg">Hard Questions to Prepare For</CardTitle>
+                            <CardTitle>Other Strategy Notes</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {strategy.handleNoExperience && (
-                                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200">
-                                    <p className="font-semibold text-sm text-amber-900 dark:text-amber-300 mb-2">If they ask: "You don't have X experience"</p>
-                                    <p className="text-sm">{strategy.handleNoExperience}</p>
+                            {strategy.dayBeforeChecklist && (
+                                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200">
+                                    <p className="font-semibold text-sm mb-2 text-blue-900 dark:text-blue-300">Day Before Checklist</p>
+                                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                                        {strategy.dayBeforeChecklist.map((c: string, i: number) => <li key={i}>{c}</li>)}
+                                    </ul>
                                 </div>
                             )}
-                            {strategy.salaryNegotiation && (
-                                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200">
-                                    <p className="font-semibold text-sm text-blue-900 dark:text-blue-300 mb-2">Salary Negotiation</p>
-                                    <p className="text-sm">{strategy.salaryNegotiation}</p>
+                            {strategy.salaryNegotiationTip && (
+                                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-200">
+                                    <p className="font-semibold text-sm text-amber-900 dark:text-amber-300 mb-2">Salary Negotiation Tip</p>
+                                    <p className="text-sm">{strategy.salaryNegotiationTip}</p>
                                 </div>
                             )}
                         </CardContent>
@@ -529,14 +624,50 @@ export function WarRoomContent({ prep, token, prepId }: any) {
                                     </Badge>
                                 </div>
                             </DialogHeader>
-                            <ScrollArea className="h-[300px] p-4 space-y-4">
-                                <div>
-                                    <p className="font-semibold text-sm mb-2">AI Feedback</p>
-                                    <p className="text-sm text-muted-foreground">{currentFeedback.feedback}</p>
+                            <ScrollArea className="h-[400px] p-4 space-y-5">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-emerald-50 dark:bg-emerald-900/10 p-3 rounded border border-emerald-200">
+                                        <p className="font-semibold text-sm text-emerald-800 dark:text-emerald-300 mb-1">✓ What Worked</p>
+                                        <ul className="list-disc pl-4 text-xs text-emerald-700 dark:text-emerald-400 space-y-1">
+                                            {currentFeedback.whatWorked?.map((w: string, i: number) => <li key={i}>{w}</li>)}
+                                        </ul>
+                                    </div>
+                                    <div className="bg-red-50 dark:bg-red-900/10 p-3 rounded border border-red-200">
+                                        <p className="font-semibold text-sm text-red-800 dark:text-red-300 mb-1">✗ To Improve</p>
+                                        <ul className="list-disc pl-4 text-xs text-red-700 dark:text-red-400 space-y-1">
+                                            {currentFeedback.whatToImprove?.map((w: string, i: number) => <li key={i}>{w}</li>)}
+                                        </ul>
+                                    </div>
                                 </div>
-                                <div className="bg-cyan-50 dark:bg-cyan-900/20 p-3 rounded-lg border border-cyan-200">
-                                    <p className="font-semibold text-sm text-cyan-900 dark:text-cyan-300 mb-2">Better Answer</p>
-                                    <p className="text-xs text-cyan-800 dark:text-cyan-200">{currentFeedback.improvedAnswer}</p>
+
+                                {currentFeedback.panelVerdict && (
+                                    <div className="space-y-3">
+                                        <p className="font-semibold text-sm">Expert Panel Verdict</p>
+                                        <div className="grid gap-2">
+                                            <div className="border border-slate-200 dark:border-slate-800 p-3 rounded bg-slate-50 dark:bg-slate-900/50">
+                                                <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase">Technical Expert</p>
+                                                <p className="text-sm mt-1">{currentFeedback.panelVerdict.technicalExpert}</p>
+                                            </div>
+                                            <div className="border border-slate-200 dark:border-slate-800 p-3 rounded bg-slate-50 dark:bg-slate-900/50">
+                                                <p className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase">HR Coach</p>
+                                                <p className="text-sm mt-1">{currentFeedback.panelVerdict.hrCoach}</p>
+                                            </div>
+                                            <div className="border border-slate-200 dark:border-slate-800 p-3 rounded bg-slate-50 dark:bg-slate-900/50">
+                                                <p className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase">Hiring Manager</p>
+                                                <p className="text-sm mt-1">{currentFeedback.panelVerdict.hiringManager}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <p className="font-semibold text-sm mb-2">Overall Coaching Feedback</p>
+                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{currentFeedback.feedback}</p>
+                                </div>
+
+                                <div className="bg-cyan-50 dark:bg-cyan-900/20 p-4 rounded-lg border border-cyan-200">
+                                    <p className="font-semibold text-sm text-cyan-900 dark:text-cyan-300 mb-2">The Perfect Answer (Model Response)</p>
+                                    <p className="text-sm text-cyan-800 dark:text-cyan-200 italic">"{currentFeedback.betterAnswer || currentFeedback.improvedAnswer}"</p>
                                 </div>
                             </ScrollArea>
                             <DialogFooter>
