@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, TrendingUp, Shield, Target, Zap, Flame, CheckCircle2, AlertCircle, Activity, Clock, CheckSquare, BookOpen } from 'lucide-react';
+import { Loader2, TrendingUp, Shield, Target, Zap, Flame, CheckCircle2, AlertCircle, Activity, Clock, CheckSquare, BookOpen, Lightbulb } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 
 interface ReadinessData {
@@ -199,15 +199,21 @@ export function ReadinessScoreDisplay({
 
   if (loading) {
     return (
-      <Card className="bg-gradient-to-br from-blue-50/80 via-cyan-50/50 to-blue-100/30 dark:from-blue-950/40 dark:via-cyan-950/30 dark:to-blue-950/20 border-2 border-blue-200/60 dark:border-blue-800/40 shadow-lg">
-        <CardContent className="p-12 flex flex-col items-center justify-center gap-4">
-          <div className="relative w-12 h-12">
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full blur-lg opacity-50 animate-pulse" />
-            <Loader2 className="w-12 h-12 animate-spin text-cyan-600 dark:text-cyan-400 relative" />
+      <Card className="glass-panel border-blue-500/20 dark:border-blue-500/10 neo-glow">
+        <CardContent className="p-12 flex flex-col items-center justify-center gap-6">
+          <div className="relative">
+            <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-2xl animate-pulse" />
+            <div className="relative p-4 bg-blue-500/10 rounded-2xl">
+              <Loader2 className="w-10 h-10 animate-spin text-blue-600 dark:text-blue-400" />
+            </div>
           </div>
-          <div className="text-center space-y-1">
-            <p className="text-sm font-semibold text-foreground">Analyzing your readiness...</p>
-            <p className="text-xs text-muted-foreground">Calculating scores based on your progress</p>
+          <div className="text-center space-y-2">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">
+              Analyzing Your Readiness
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-[250px] mx-auto">
+              Recalculating your career trajectory based on recent activity...
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -216,16 +222,14 @@ export function ReadinessScoreDisplay({
 
   if (!readinessData) {
     return (
-      <Card className="bg-gradient-to-br from-red-50/80 to-orange-50/50 dark:from-red-950/40 dark:to-orange-950/30 border-2 border-red-200/60 dark:border-red-800/40 shadow-lg">
-        <CardContent className="p-6 flex items-center gap-3">
-          <div className="p-2 bg-red-500/10 rounded-lg">
-            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+      <Card className="glass-panel border-red-500/20 dark:border-red-500/10">
+        <CardContent className="p-6 flex items-center gap-4">
+          <div className="p-3 bg-red-500/10 rounded-xl">
+            <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-red-700 dark:text-red-300">Unable to load readiness data</p>
-            <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
-              {error || 'Please refresh the page to try again.'}
-            </p>
+          <div>
+            <p className="text-base font-bold text-foreground">Readiness Assessment Unavailable</p>
+            <p className="text-sm text-muted-foreground">{error || 'Please refresh to attempt recalculation.'}</p>
           </div>
         </CardContent>
       </Card>
@@ -256,178 +260,139 @@ export function ReadinessScoreDisplay({
       )}
 
       {/* Two Column Layout */}
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-6">
         
         {/* INITIAL ASSESSMENT CARD - Enhanced */}
-        <Card className="bg-gradient-to-br from-slate-50/60 via-blue-50/40 to-blue-100/30 dark:from-slate-900/40 dark:via-blue-950/30 dark:to-blue-950/20 border-2 border-blue-200/50 dark:border-blue-800/40 hover:border-blue-300/80 dark:hover:border-blue-700/60 transition-all duration-300 group shadow-sm hover:shadow-md">
-          <CardHeader className="pb-3 relative">
-            <div className="absolute -top-8 right-4 w-16 h-16 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-full blur-xl group-hover:from-blue-500/20 group-hover:to-cyan-500/20 transition-all duration-300" />
-            <CardTitle className="text-lg flex items-center gap-2 relative z-10">
-              <span className="text-2xl">📋</span> Initial Assessment
+        <Card className="glass-card border-blue-500/20 dark:border-blue-500/10 hover:border-blue-500/40 transform hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-colors" />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <div className="p-1.5 bg-blue-500/10 rounded-lg">
+                <Shield className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              Baseline Assessment
             </CardTitle>
-            <CardDescription className="text-xs mt-1">
-              AI evaluation at the start of your journey
+            <CardDescription className="text-xs">
+              AI evaluation at start of journey
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 relative z-10">
-            <div className="space-y-2">
-              <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">
+          <CardContent className="space-y-4">
+            <div className="space-y-1">
+              <div className="text-5xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent tracking-tighter">
                 {readinessData.initialScore}
-                <span className="text-lg text-muted-foreground ml-2 bg-clip-text text-clip">/99</span>
+                <span className="text-xl text-muted-foreground ml-1">/99</span>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Your AI-evaluated starting readiness based on resume analysis
-              </p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Initial Profile Score</p>
             </div>
             
-            <Separator className="my-3 bg-blue-200/50 dark:bg-blue-800/50" />
+            <Separator className="bg-white/10 dark:bg-white/5" />
             
-            <div className="space-y-2 text-sm">
-              <p className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <span className="text-lg">🔍</span> What this means:
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-foreground/80 uppercase tracking-widest flex items-center gap-1.5">
+                <Target className="w-3.5 h-3.5" /> Baseline Factors
               </p>
-              <ul className="space-y-1.5 text-xs text-muted-foreground">
-                <li className="flex items-center gap-2"><span className="text-cyan-600 dark:text-cyan-400">✓</span> Based on your resume & skills</li>
-                <li className="flex items-center gap-2"><span className="text-cyan-600 dark:text-cyan-400">✓</span> Your current ability level</li>
-                <li className="flex items-center gap-2"><span className="text-cyan-600 dark:text-cyan-400">✓</span> Your baseline for improvement</li>
+              <ul className="grid grid-cols-1 gap-2 text-xs text-muted-foreground">
+                <li className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-blue-500" /> Resume & Skill Matching</li>
+                <li className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-blue-500" /> Industry Benchmark Data</li>
+                <li className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-blue-500" /> Profile Sophistication</li>
               </ul>
             </div>
           </CardContent>
         </Card>
 
         {/* CURRENT READINESS SCORE CARD - Enhanced */}
-        <Card className="bg-gradient-to-br from-emerald-50/60 via-green-50/40 to-teal-100/30 dark:from-emerald-950/40 dark:via-green-950/30 dark:to-teal-950/20 border-2 border-emerald-200/50 dark:border-emerald-800/40 hover:border-emerald-300/80 dark:hover:border-emerald-700/60 transition-all duration-300 group shadow-sm hover:shadow-md ring-2 ring-emerald-300/30 dark:ring-emerald-700/30">
-          <CardHeader className="pb-3 relative">
-            <div className="absolute -top-8 right-4 w-16 h-16 bg-gradient-to-br from-emerald-500/10 to-green-500/10 rounded-full blur-xl group-hover:from-emerald-500/20 group-hover:to-green-500/20 transition-all duration-300" />
-            <CardTitle className="text-lg flex items-center gap-2 relative z-10">
-              <span className="text-2xl">🎯</span> Current Readiness Score
+        <Card className="glass-panel border-emerald-500/20 dark:border-emerald-500/10 neo-glow transform hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors" />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <div className="p-1.5 bg-emerald-500/10 rounded-lg">
+                <Activity className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              Real-time Readiness
             </CardTitle>
-            <CardDescription className="text-xs mt-1">
-              Your actual progress from real-world learning
+            <CardDescription className="text-xs">
+              Live score based on your effort
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 relative z-10">
-            <div className="space-y-2">
-              <div className="flex items-baseline gap-3">
-                <div className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 dark:from-emerald-400 dark:to-green-400 bg-clip-text text-transparent">
+          <CardContent className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="text-5xl font-black bg-gradient-to-r from-emerald-600 to-green-600 dark:from-emerald-400 dark:to-green-400 bg-clip-text text-transparent tracking-tighter">
                   {readinessData.dynamicScore}
-                  <span className="text-lg text-muted-foreground ml-2 bg-clip-text text-clip">/99</span>
+                  <span className="text-xl text-muted-foreground ml-1">/99</span>
                 </div>
-              </div>
-              
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge 
-                  className={`text-xs font-semibold ${getConfidenceBadgeColor(readinessData.confidenceLevel)}`}
-                >
+                <Badge className={`${getConfidenceBadgeColor(readinessData.confidenceLevel)} border shadow-sm`}>
                   {readinessData.confidenceLevel}
                 </Badge>
-                {improvementValue !== 0 && (
-                  <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold ${improvementValue > 0 ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-300/50 dark:border-emerald-700/50' : 'bg-orange-500/10 text-orange-700 dark:text-orange-300 border border-orange-300/50 dark:border-orange-700/50'}`}>
-                    {improvementValue > 0 ? <TrendingUp className="w-4 h-4" /> : <Flame className="w-4 h-4" />}
-                    <span>{improvementValue > 0 ? '+' : ''}{improvementValue}</span>
+              </div>
+              
+              {improvementValue !== 0 && (
+                <div className={`p-4 rounded-2xl border text-center min-w-[80px] ${
+                  improvementValue > 0 
+                  ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
+                  : 'bg-orange-500/5 border-orange-500/20 text-orange-600 dark:text-orange-400'
+                }`}>
+                  <p className="text-xs font-bold uppercase tracking-widest mb-1">{improvementValue > 0 ? 'Gain' : 'Drop'}</p>
+                  <div className="flex items-center justify-center gap-1 font-black text-xl">
+                    {improvementValue > 0 ? <TrendingUp className="w-5 h-5" /> : <Flame className="w-5 h-5" />}
+                    {improvementValue > 0 ? '+' : ''}{improvementValue}
                   </div>
-                )}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-muted-foreground uppercase tracking-widest">Goal Progress</span>
+                <span className="text-emerald-600 dark:text-emerald-400">{Math.round((readinessData.dynamicScore / 99) * 100)}%</span>
+              </div>
+              <div className="h-2 bg-muted/50 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-500 to-green-500 transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                  style={{ width: `${(readinessData.dynamicScore / 99) * 100}%` }}
+                />
               </div>
             </div>
 
-            <div className="space-y-2.5">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <span>📊</span> Progress
-                </span>
-                <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{Math.round((readinessData.dynamicScore / 99) * 100)}%</span>
-              </div>
-              <Progress 
-                value={(readinessData.dynamicScore / 99) * 100} 
-                className="h-2.5 rounded-full overflow-hidden"
-              />
-            </div>
+            <Separator className="bg-white/10 dark:bg-white/5" />
 
-            <Separator className="my-3 bg-emerald-200/50 dark:bg-emerald-800/50" />
-
-            <div className="space-y-2 text-sm">
-              <p className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <span className="text-lg">⬆️</span> What increases this:
-              </p>
-              <ul className="space-y-1.5 text-xs text-muted-foreground">
-                <li className="flex items-center gap-2"><span className="text-emerald-600 dark:text-emerald-400">✓</span> Completing roadmap tasks</li>
-                <li className="flex items-center gap-2"><span className="text-emerald-600 dark:text-emerald-400">✓</span> Using quality resources</li>
-                <li className="flex items-center gap-2"><span className="text-emerald-600 dark:text-emerald-400">✓</span> Building real projects</li>
-                <li className="flex items-center gap-2"><span className="text-emerald-600 dark:text-emerald-400">✓</span> Active engagement daily</li>
-              </ul>
+            <div className="grid grid-cols-2 gap-2 text-[10px] text-muted-foreground font-medium">
+              <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> Tasks</div>
+              <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> Skills</div>
+              <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> Projects</div>
+              <div className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> Activity</div>
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      {/* ENGAGEMENT METRICS CARD - Enhanced */}
+      </div>      {/* ENGAGEMENT METRICS CARD - Enhanced */}
       {readinessData.engagementMetrics && (
-        <Card className="bg-gradient-to-br from-violet-50/60 via-purple-50/40 to-fuchsia-100/30 dark:from-violet-950/40 dark:via-purple-950/30 dark:to-fuchsia-950/20 border-2 border-violet-200/50 dark:border-violet-800/40 shadow-sm hover:shadow-md transition-all duration-300 group">
-          <CardHeader className="pb-3 relative">
-            <div className="absolute -top-8 right-4 w-16 h-16 bg-gradient-to-br from-violet-500/10 to-purple-500/10 rounded-full blur-xl group-hover:from-violet-500/20 group-hover:to-purple-500/20 transition-all duration-300" />
-            <CardTitle className="text-lg flex items-center gap-2 relative z-10">
-              <span className="text-2xl">📈</span> Your Engagement Stats
+        <Card className="glass-card border-violet-500/20 dark:border-violet-500/10 hover:border-violet-500/40 transform hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <div className="p-1.5 bg-violet-500/10 rounded-lg">
+                <TrendingUp className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+              </div>
+              Consistency & Effort
             </CardTitle>
-            <CardDescription className="text-xs mt-1 relative z-10">
-              Real activity metrics that power your readiness growth
-            </CardDescription>
           </CardHeader>
-          <CardContent className="relative z-10">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="p-4 bg-gradient-to-br from-white/60 to-violet-50/50 dark:from-slate-900/40 dark:to-violet-950/30 rounded-lg border border-violet-200/60 dark:border-violet-800/40 hover:border-violet-300/80 dark:hover:border-violet-700/60 transition-all duration-200 hover:shadow-md group/metric">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1.5 bg-violet-500/10 group-hover/metric:bg-violet-500/20 rounded-lg transition-all duration-200">
-                    <Clock className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: 'Days Active', value: readinessData.engagementMetrics.daysActive, icon: Clock, color: 'violet' },
+                { label: 'Tasks Done', value: readinessData.engagementMetrics.tasksCompleted, icon: CheckSquare, color: 'emerald' },
+                { label: 'Resources', value: readinessData.engagementMetrics.resourcesUsed, icon: BookOpen, color: 'blue' },
+                { label: 'Last Active', value: readinessData.engagementMetrics.lastActiveDate 
+                  ? new Date(readinessData.engagementMetrics.lastActiveDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                  : 'Never', icon: Flame, color: 'orange' }
+              ].map((m, i) => (
+                <div key={i} className="p-4 bg-white/5 dark:bg-black/20 rounded-xl border border-white/10 dark:border-white/5 backdrop-blur-sm group/item hover:bg-white/10 dark:hover:bg-black/30 transition-colors">
+                  <div className="flex items-center gap-2 mb-2">
+                    <m.icon className={`w-3.5 h-3.5 text-${m.color}-500`} />
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{m.label}</p>
                   </div>
-                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">Days Active</p>
+                  <p className="text-2xl font-black text-foreground">{m.value}</p>
                 </div>
-                <p className="text-2xl font-bold text-violet-600 dark:text-violet-400">
-                  {readinessData.engagementMetrics.daysActive}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">total</p>
-              </div>
-
-              <div className="p-4 bg-gradient-to-br from-white/60 to-emerald-50/50 dark:from-slate-900/40 dark:to-emerald-950/30 rounded-lg border border-emerald-200/60 dark:border-emerald-800/40 hover:border-emerald-300/80 dark:hover:border-emerald-700/60 transition-all duration-200 hover:shadow-md group/metric">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1.5 bg-emerald-500/10 group-hover/metric:bg-emerald-500/20 rounded-lg transition-all duration-200">
-                    <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">Tasks Done</p>
-                </div>
-                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                  {readinessData.engagementMetrics.tasksCompleted}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">completed</p>
-              </div>
-
-              <div className="p-4 bg-gradient-to-br from-white/60 to-blue-50/50 dark:from-slate-900/40 dark:to-blue-950/30 rounded-lg border border-blue-200/60 dark:border-blue-800/40 hover:border-blue-300/80 dark:hover:border-blue-700/60 transition-all duration-200 hover:shadow-md group/metric">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1.5 bg-blue-500/10 group-hover/metric:bg-blue-500/20 rounded-lg transition-all duration-200">
-                    <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">Resources</p>
-                </div>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {readinessData.engagementMetrics.resourcesUsed}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">used</p>
-              </div>
-
-              <div className="p-4 bg-gradient-to-br from-white/60 to-orange-50/50 dark:from-slate-900/40 dark:to-orange-950/30 rounded-lg border border-orange-200/60 dark:border-orange-800/40 hover:border-orange-300/80 dark:hover:border-orange-700/60 transition-all duration-200 hover:shadow-md group/metric">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1.5 bg-orange-500/10 group-hover/metric:bg-orange-500/20 rounded-lg transition-all duration-200">
-                    <Flame className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                  </div>
-                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">Last Active</p>
-                </div>
-                <p className="text-sm font-bold text-orange-600 dark:text-orange-400">
-                  {readinessData.engagementMetrics.lastActiveDate 
-                    ? new Date(readinessData.engagementMetrics.lastActiveDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                    : 'Never'
-                  }
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">ago</p>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -435,47 +400,47 @@ export function ReadinessScoreDisplay({
 
       {/* SCORE BREAKDOWN */}
       {readinessData.factors && (
-        <Card className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Score Breakdown - 6 Factors</CardTitle>
-            <CardDescription>
-              How your readiness score is calculated
+        <Card className="glass-card border-white/10 dark:border-white/5 overflow-hidden">
+          <CardHeader className="pb-3 bg-white/5 dark:bg-black/20">
+            <CardTitle className="text-base font-bold">Calculation Breakdown</CardTitle>
+            <CardDescription className="text-xs">
+              Weighting based on industry readiness benchmarks
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <ScoreFactor 
-                label="Task Completion (25%)" 
+                label="Task Velocity" 
                 value={readinessData.factors.taskCompletion}
                 icon={<CheckCircle2 className="w-4 h-4" />}
                 color="cyan"
               />
               <ScoreFactor 
-                label="Resource Usage (20%)" 
+                label="Resource Depth" 
                 value={readinessData.factors.resourceCompletion}
                 icon={<BookOpen className="w-4 h-4" />}
                 color="blue"
               />
               <ScoreFactor 
-                label="Skill Growth (25%)" 
+                label="Skill Delta" 
                 value={readinessData.factors.skillImprovement}
                 icon={<TrendingUp className="w-4 h-4" />}
                 color="emerald"
               />
               <ScoreFactor 
-                label="Projects Built (15%)" 
+                label="Applied Knowledge" 
                 value={readinessData.factors.projectCompletion}
                 icon={<Shield className="w-4 h-4" />}
                 color="purple"
               />
               <ScoreFactor 
-                label="Engagement (10%)" 
+                label="Platform Activity" 
                 value={readinessData.factors.engagement}
                 icon={<Flame className="w-4 h-4" />}
                 color="orange"
               />
               <ScoreFactor 
-                label="Consistency (5%)" 
+                label="Learning Streak" 
                 value={readinessData.factors.consistency}
                 icon={<Zap className="w-4 h-4" />}
                 color="yellow"
@@ -484,24 +449,26 @@ export function ReadinessScoreDisplay({
           </CardContent>
         </Card>
       )}
-
       {/* RECOMMENDATIONS */}
       {readinessData.recommendations && readinessData.recommendations.length > 0 && (
-        <Card className="bg-gradient-to-br from-sky-50 to-cyan-50 dark:from-sky-950/30 dark:to-cyan-950/30 border-sky-200 dark:border-sky-700">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              💡 Recommended Next Steps
+        <Card className="glass-card border-cyan-500/20 dark:border-cyan-500/10 hover:border-cyan-500/40 transform hover:-translate-y-0.5 transition-all duration-300">
+          <CardHeader className="pb-3 border-b border-white/5 bg-cyan-500/5">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <Lightbulb className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+              Strategic Growth Steps
             </CardTitle>
-            <CardDescription>
-              Personalized suggestions to boost your readiness
+            <CardDescription className="text-xs">
+              Personalized AI suggestions to boost your readiness
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
+          <CardContent className="pt-5">
+            <ul className="space-y-3">
               {readinessData.recommendations.slice(0, 5).map((rec, idx) => (
-                <li key={idx} className="flex gap-3 text-sm">
-                  <span className="text-cyan-600 dark:text-cyan-400 font-bold flex-shrink-0">{idx + 1}.</span>
-                  <span className="text-foreground">{rec}</span>
+                <li key={idx} className="flex gap-4 group/rec">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-xs font-black border border-cyan-500/20 group-hover/rec:bg-cyan-500/20 transition-colors">
+                    {idx + 1}
+                  </div>
+                  <span className="text-sm text-foreground/80 leading-relaxed group-hover/rec:text-foreground transition-colors">{rec}</span>
                 </li>
               ))}
             </ul>
@@ -510,11 +477,12 @@ export function ReadinessScoreDisplay({
       )}
 
       {/* INFO FOOTER */}
-      <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-        <p className="text-sm text-blue-800 dark:text-blue-300 leading-relaxed">
-          <strong>⚡ How Your Score Grows:</strong> Your readiness score only increases when you actively engage with the roadmap. 
-          Complete tasks, use quality resources, build projects, and maintain consistency. No engagement = No score increase. 
-          The "Initial Assessment" is your starting point; "Current Readiness Score" reflects your actual effort and progress. 💪
+      <div className="p-6 bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/20 dark:border-blue-500/10 rounded-2xl relative overflow-hidden group">
+        <div className="absolute -left-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl opacity-50 group-hover:opacity-100 transition-opacity" />
+        <p className="text-xs text-blue-800 dark:text-blue-300 leading-relaxed relative z-10 font-medium">
+          <strong className="text-blue-600 dark:text-blue-400 font-bold uppercase tracking-widest mr-2">Core Principle:</strong> 
+          Your readiness score is a living metric. It only grows through <span className="text-foreground font-bold underline decoration-blue-500/30">consistent daily effort</span>. 
+          Completing tasks, building projects, and engaging with resources are the only ways to climb towards your 99/99 goal.
         </p>
       </div>
     </div>
@@ -530,28 +498,39 @@ interface ScoreFactorProps {
 
 function ScoreFactor({ label, value, icon, color }: ScoreFactorProps) {
   const colorClasses: { [key: string]: string } = {
-    cyan: 'text-cyan-600 dark:text-cyan-400',
-    blue: 'text-blue-600 dark:text-blue-400',
-    emerald: 'text-emerald-600 dark:text-emerald-400',
-    purple: 'text-purple-600 dark:text-purple-400',
-    orange: 'text-orange-600 dark:text-orange-400',
-    yellow: 'text-yellow-600 dark:text-yellow-400'
+    cyan: 'text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
+    blue: 'text-blue-600 dark:text-blue-400 border-blue-500/20',
+    emerald: 'text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+    purple: 'text-purple-600 dark:text-purple-400 border-purple-500/20',
+    orange: 'text-orange-600 dark:text-orange-400 border-orange-500/20',
+    yellow: 'text-yellow-600 dark:text-yellow-400 border-yellow-500/20'
+  };
+
+  const bgClasses: { [key: string]: string } = {
+    cyan: 'bg-cyan-500',
+    blue: 'bg-blue-500',
+    emerald: 'bg-emerald-500',
+    purple: 'bg-purple-500',
+    orange: 'bg-orange-500',
+    yellow: 'bg-yellow-500'
   };
 
   return (
-    <div className="p-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-cyan-300 dark:hover:border-cyan-600 transition-colors">
-      <div className="flex items-center gap-2 mb-2">
-        <span className={`${colorClasses[color]}`}>{icon}</span>
-        <p className="text-xs font-semibold text-foreground line-clamp-1">{label}</p>
+    <div className={`p-4 rounded-xl border glass-card hover:translate-x-1 transition-all duration-300 ${colorClasses[color].split(' ')[2]}`}>
+      <div className="flex items-center gap-2 mb-3">
+        <span className={colorClasses[color].split(' ').slice(0, 2).join(' ')}>{icon}</span>
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest line-clamp-1">{label}</p>
       </div>
-      <div className="flex items-end gap-2">
-        <p className="text-2xl font-bold text-foreground">{value}</p>
-        <span className="text-xs text-muted-foreground mb-0.5">%</span>
+      <div className="flex items-baseline gap-2 mb-3">
+        <p className="text-2xl font-black text-foreground">{value}</p>
+        <span className="text-xs font-bold text-muted-foreground">%</span>
       </div>
-      <Progress 
-        value={value} 
-        className="h-1 mt-2"
-      />
+      <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden">
+        <div 
+          className={`h-full ${bgClasses[color]} transition-all duration-1000 shadow-[0_0_8px_rgba(0,0,0,0.1)]`}
+          style={{ width: `${value}%` }}
+        />
+      </div>
     </div>
   );
 }

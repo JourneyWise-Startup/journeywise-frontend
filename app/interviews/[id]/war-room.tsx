@@ -169,7 +169,7 @@ export function WarRoomContent({ prep, token, prepId }: any) {
     return (
         <>
             {/* Readiness Header */}
-            <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-lg p-6 mb-8">
+            <div className="bg-gradient-to-r from-cyan-500/5 to-blue-500/5 border border-cyan-500/20 rounded-2xl p-6 mb-8 backdrop-blur-xl bg-slate-900/40 shadow-2xl shadow-cyan-500/10">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <p className="text-sm text-muted-foreground mb-2">Overall Readiness</p>
@@ -596,19 +596,50 @@ export function WarRoomContent({ prep, token, prepId }: any) {
                     {mockState === 'question' && questions.length > 0 && (
                         <>
                             <DialogHeader>
-                                <div className="flex items-center justify-between">
-                                    <Badge>Q{currentQIndex + 1} / {isPaid ? questions.length : Math.min(questions.length, 5)}</Badge>
-                                    <span className="text-xs text-muted-foreground">{questions[currentQIndex]?.type}</span>
+                                <div className="flex items-center justify-between border-b pb-4 border-slate-800">
+                                    <Badge className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">Q{currentQIndex + 1} / {isPaid ? questions.length : Math.min(questions.length, 5)}</Badge>
+                                    <span className="text-xs text-muted-foreground px-2 py-1 bg-slate-800/50 rounded-md border border-slate-700/50">{questions[currentQIndex]?.type}</span>
                                 </div>
                             </DialogHeader>
-                            <div className="py-4">
-                                <h3 className="font-semibold text-lg mb-4">{questions[currentQIndex]?.q}</h3>
-                                <Textarea value={userAnswer} onChange={(e) => setUserAnswer(e.target.value)} placeholder="Type your answer..." className="h-40" />
+                            <div className="py-6 space-y-6">
+                                {/* AI Message */}
+                                <div className="flex gap-4 p-5 rounded-xl bg-slate-800/40 border border-slate-700/50 backdrop-blur-sm shadow-xl relative overflow-hidden group">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
+                                        <Zap className="h-5 w-5 text-white animate-pulse" />
+                                    </div>
+                                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                        <p className="font-semibold text-cyan-400 text-sm mb-1">AI Interviewer</p>
+                                        <h3 className="text-lg text-slate-200 leading-relaxed font-medium">{questions[currentQIndex]?.q}</h3>
+                                    </div>
+                                </div>
+                                
+                                {/* User Input */}
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center px-1">
+                                        <p className="text-sm font-semibold text-slate-300">Your Response</p>
+                                        {submitting && (
+                                            <span className="text-xs text-cyan-400 flex items-center gap-1.5">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                                                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                                                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                                                <span className="ml-1 animate-pulse">AI is analyzing...</span>
+                                            </span>
+                                        )}
+                                    </div>
+                                    <Textarea 
+                                        value={userAnswer} 
+                                        onChange={(e) => setUserAnswer(e.target.value)} 
+                                        disabled={submitting} 
+                                        placeholder="Type your answer here..." 
+                                        className="h-40 bg-slate-900/60 border-slate-700/50 focus:border-cyan-500/50 resize-none text-slate-200 rounded-xl shadow-inner transition-all p-4 disabled:opacity-50" 
+                                    />
+                                </div>
                             </div>
-                            <DialogFooter>
-                                <Button onClick={submitMockAnswer} disabled={submitting || !userAnswer.trim()} className="w-full">
-                                    {submitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
-                                    Submit Answer
+                            <DialogFooter className="pt-2 border-t border-slate-800">
+                                <Button onClick={submitMockAnswer} disabled={submitting || !userAnswer.trim()} className="w-full h-12 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-xl shadow-cyan-500/20 text-md font-semibold transition-all hover:scale-[1.01]">
+                                    {submitting ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : <Send className="mr-2 h-5 w-5" />}
+                                    {submitting ? 'Analyzing response metrics...' : 'Submit Answer'}
                                 </Button>
                             </DialogFooter>
                         </>

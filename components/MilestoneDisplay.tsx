@@ -42,12 +42,15 @@ export function MilestoneDisplay({
     return (
         <div className="space-y-6">
             {/* Section Header */}
-            <div className="mb-4">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="h-6 w-1.5 bg-gradient-to-b from-purple-600 to-pink-600 rounded-full"></div>
-                    <h3 className="text-2xl font-bold text-foreground">Journey Breakdown</h3>
+            <div className="p-6 glass-panel border-purple-500/20 dark:border-purple-500/10 mb-8 overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-3xl opacity-50" />
+                <div className="space-y-1 relative z-10">
+                    <h3 className="text-2xl font-black bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent flex items-center gap-3">
+                        <Trophy className="w-7 h-7 text-purple-600 dark:text-purple-400" />
+                        Monthly Milestones
+                    </h3>
+                    <p className="text-sm font-medium text-muted-foreground ml-10">Strategic breakdown of your 3-month high-intensity growth path</p>
                 </div>
-                <p className="text-sm text-muted-foreground ml-6">Monthly milestones to accelerate your growth</p>
             </div>
 
             {/* Milestones Grid - 2 Columns */}
@@ -59,75 +62,77 @@ export function MilestoneDisplay({
                     return (
                         <Card
                             key={index}
-                            className={`transition-all duration-300 overflow-hidden hover:shadow-lg ${
+                            className={`glass-card border group hover:scale-[1.01] transition-all duration-500 relative overflow-hidden ${
                                 isCompleted
-                                    ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900'
-                                    : 'bg-card border-border hover:border-gray-400 dark:hover:border-gray-600'
+                                    ? 'border-emerald-500/30 neo-glow'
+                                    : 'border-white/10 dark:border-white/5 hover:border-purple-500/30'
                             }`}
                         >
-                            <CardHeader>
+                            <div className={`h-1.5 w-full bg-gradient-to-r ${
+                                isCompleted ? 'from-emerald-500 to-teal-500' : 'from-purple-500 to-pink-500'
+                            }`} />
+                            <CardHeader className="pb-4">
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <CardTitle className={`text-lg font-bold ${
-                                                isCompleted
-                                                    ? 'text-emerald-700 dark:text-emerald-400'
-                                                    : 'text-foreground'
+                                            <Badge className={`text-[10px] font-black uppercase tracking-widest ${
+                                                isCompleted ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-purple-500/10 text-purple-600 border-purple-500/20'
                                             }`}>
-                                                {monthLabel} (Month {milestone.month})
-                                            </CardTitle>
+                                                {monthLabel}
+                                            </Badge>
                                             {isCompleted && (
-                                                <Badge className="bg-emerald-600 text-white text-xs py-1">
-                                                    ✓ Done
-                                                </Badge>
+                                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest animate-pulse">
+                                                    <CheckCircle2 className="w-3 h-3" /> Achieved
+                                                </div>
                                             )}
                                         </div>
-                                        <h3 className="text-xl font-bold text-foreground mb-1">
+                                        <h3 className="text-2xl font-black text-foreground tracking-tight group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                                             {milestone.title}
                                         </h3>
-                                        <CardDescription className="text-sm">
+                                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-70">
                                             {milestone.focus}
-                                        </CardDescription>
+                                        </p>
                                     </div>
 
                                     {milestone.hoursRequired && (
-                                        <div className="flex-shrink-0 px-3 py-2 bg-muted rounded-lg text-center">
-                                            <Clock className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
-                                            <p className="text-xs font-semibold text-foreground">{milestone.hoursRequired}h</p>
+                                        <div className="flex-shrink-0 px-4 py-3 bg-white/5 dark:bg-black/20 rounded-2xl border border-white/5 backdrop-blur-sm text-center transform group-hover:rotate-6 transition-transform">
+                                            <Clock className="w-5 h-5 text-purple-500 mx-auto mb-1" />
+                                            <p className="text-lg font-black text-foreground leading-none">{milestone.hoursRequired}h</p>
+                                            <p className="text-[8px] font-bold text-muted-foreground uppercase mt-1">Goal</p>
                                         </div>
                                     )}
                                 </div>
                             </CardHeader>
 
-                            <CardContent className="space-y-4">
+                            <CardContent className="space-y-4 pt-2">
                                 {/* Expected Outcome */}
-                                <div className="p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50 dark:border-blue-900/50">
-                                    <h4 className="text-sm font-semibold text-blue-700 dark:text-blue-400 mb-2 flex items-center gap-2">
+                                <div className="p-4 bg-blue-500/5 dark:bg-blue-500/10 rounded-2xl border border-blue-500/10 group-hover:bg-blue-500/10 transition-colors">
+                                    <h4 className="text-[10px] font-black text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-2 uppercase tracking-widest">
                                         <Target className="w-4 h-4" />
                                         Expected Outcome
                                     </h4>
-                                    <p className="text-sm text-foreground/80">{milestone.expectedOutcome}</p>
+                                    <p className="text-sm text-foreground/80 leading-relaxed font-medium">{milestone.expectedOutcome}</p>
                                 </div>
 
                                 {/* Success Criteria */}
                                 {milestone.successCriteria && (
-                                    <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-lg border border-emerald-200/50 dark:border-emerald-900/50">
-                                        <h4 className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mb-2 flex items-center gap-2">
+                                    <div className="p-4 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-2xl border border-emerald-500/10 group-hover:bg-emerald-500/10 transition-colors">
+                                        <h4 className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 mb-2 flex items-center gap-2 uppercase tracking-widest">
                                             <Trophy className="w-4 h-4" />
                                             Success Criteria
                                         </h4>
-                                        <p className="text-sm text-foreground/80">{milestone.successCriteria}</p>
+                                        <p className="text-sm text-foreground/80 leading-relaxed font-medium">{milestone.successCriteria}</p>
                                     </div>
                                 )}
 
                                 {/* Projects */}
                                 {milestone.projects && (
-                                    <div className="p-3 bg-purple-50/50 dark:bg-purple-950/20 rounded-lg border border-purple-200/50 dark:border-purple-900/50">
-                                        <h4 className="text-sm font-semibold text-purple-700 dark:text-purple-400 mb-2 flex items-center gap-2">
+                                    <div className="p-4 bg-purple-500/5 dark:bg-purple-500/10 rounded-2xl border border-purple-500/10 group-hover:bg-purple-500/10 transition-colors">
+                                        <h4 className="text-[10px] font-black text-purple-600 dark:text-purple-400 mb-2 flex items-center gap-2 uppercase tracking-widest">
                                             <Zap className="w-4 h-4" />
                                             Projects to Build
                                         </h4>
-                                        <p className="text-sm text-foreground/80">{milestone.projects}</p>
+                                        <p className="text-sm text-foreground/80 leading-relaxed font-medium">{milestone.projects}</p>
                                     </div>
                                 )}
                             </CardContent>
@@ -137,42 +142,31 @@ export function MilestoneDisplay({
             </div>
 
             {/* Tips Section */}
-            <Card className="bg-gradient-to-br from-yellow-50 to-orange-50/50 dark:from-yellow-950/30 dark:to-orange-950/30 border-yellow-200/50 dark:border-yellow-900/50">
-                <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
-                        <Trophy className="w-5 h-5" />
-                        Tips for Milestone Success
+            <Card className="glass-panel border-yellow-500/20 dark:border-yellow-500/10 neo-glow overflow-hidden relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <CardHeader className="pb-4">
+                    <CardTitle className="text-xl font-black flex items-center gap-3 bg-gradient-to-r from-yellow-600 to-orange-600 dark:from-yellow-400 dark:to-orange-400 bg-clip-text text-transparent">
+                        <Trophy className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                        Strategies for Domination
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                    <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-600 text-white flex items-center justify-center text-xs font-bold">1</div>
-                        <div>
-                            <p className="text-sm font-semibold text-foreground">Stay Consistent</p>
-                            <p className="text-sm text-muted-foreground">Work on your roadmap for 1-2 hours daily. Consistency beats intensity.</p>
+                <CardContent className="grid md:grid-cols-2 gap-6 pt-0">
+                    {[
+                        { title: 'Extreme Consistency', desc: 'Work on your roadmap for 1-2 hours daily. Momentum is your greatest asset.', icon: '⚡' },
+                        { title: 'Progress Tracking', desc: 'Mark milestones as "Done" to see your readiness score climb in real-time.', icon: '📈' },
+                        { title: 'Project Priority', desc: 'Focus on building the 3 core projects. Real-world code beats theory 10:1.', icon: '💻' },
+                        { title: 'Curation Trust', desc: 'The AI has hand-picked these resources for maximum ROI. Don\'t skip them.', icon: '🎯' }
+                    ].map((tip, i) => (
+                        <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 dark:bg-black/20 border border-white/10 hover:bg-white/10 dark:hover:bg-black/30 transition-all group/tip cursor-default">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-yellow-500/10 text-xl flex items-center justify-center border border-yellow-500/20 group-hover/tip:scale-110 transition-transform">
+                                {tip.icon}
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-sm font-black text-foreground uppercase tracking-tight">{tip.title}</p>
+                                <p className="text-xs text-muted-foreground leading-relaxed font-medium">{tip.desc}</p>
+                            </div>
                         </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-600 text-white flex items-center justify-center text-xs font-bold">2</div>
-                        <div>
-                            <p className="text-sm font-semibold text-foreground">Track Progress</p>
-                            <p className="text-sm text-muted-foreground">Mark weeks as complete in the Weekly Plan tab to monitor your journey.</p>
-                        </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-600 text-white flex items-center justify-center text-xs font-bold">3</div>
-                        <div>
-                            <p className="text-sm font-semibold text-foreground">Build Projects</p>
-                            <p className="text-sm text-muted-foreground">Focus on the 3 projects - they're worth more than 100 hours of theory.</p>
-                        </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-600 text-white flex items-center justify-center text-xs font-bold">4</div>
-                        <div>
-                            <p className="text-sm font-semibold text-foreground">Don't Skip Details</p>
-                            <p className="text-sm text-muted-foreground">Use direct resource links provided - they're curated for you.</p>
-                        </div>
-                    </div>
+                    ))}
                 </CardContent>
             </Card>
         </div>

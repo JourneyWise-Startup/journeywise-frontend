@@ -115,29 +115,31 @@ export function WeeklyRoadmapDisplay({
 
             {/* Progress Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-950/40 dark:to-blue-950/20 border-cyan-200 dark:border-cyan-800">
+                <Card className="glass-card border-cyan-500/20 dark:border-cyan-500/10 hover:border-cyan-500/40 transform hover:-translate-y-1 transition-all duration-300">
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-3">
-                            <p className="text-xs font-semibold text-muted-foreground uppercase">Progress</p>
-                            <p className="text-2xl font-bold text-cyan-700 dark:text-cyan-400">{progressPercentage}%</p>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Progress</p>
+                            <p className="text-2xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-400 dark:to-blue-400 bg-clip-text text-transparent">{progressPercentage}%</p>
                         </div>
-                        <div className="w-full bg-cyan-200 dark:bg-cyan-900/30 rounded-full h-2">
+                        <div className="w-full bg-cyan-200/30 dark:bg-cyan-900/20 rounded-full h-2 overflow-hidden">
                             <div 
-                                className="bg-cyan-600 dark:bg-cyan-500 h-2 rounded-full transition-all"
+                                className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(6,182,212,0.5)]"
                                 style={{ width: `${progressPercentage}%` }}
                             ></div>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-2">{completedWeeks.length} of {weeklyPlan.length} weeks</p>
+                        <p className="text-xs text-muted-foreground mt-2 font-medium">{completedWeeks.length} of {weeklyPlan.length} weeks</p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/40 dark:to-pink-950/20 border-purple-200 dark:border-purple-800">
+                <Card className="glass-card border-purple-500/20 dark:border-purple-500/10 hover:border-purple-500/40 transform hover:-translate-y-1 transition-all duration-300">
                     <CardContent className="p-4">
                         <div className="flex items-center gap-3">
-                            <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                            <div className="p-2 bg-purple-500/10 rounded-lg">
+                                <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                            </div>
                             <div>
-                                <p className="text-xs font-semibold text-muted-foreground uppercase">Avg Weekly</p>
-                                <p className="text-2xl font-bold text-purple-700 dark:text-purple-400">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Avg Weekly</p>
+                                <p className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
                                     ~{Math.round(weeklyPlan.reduce((sum, w) => sum + getTotalWeeklyHours(w.dailyTasks), 0) / weeklyPlan.length)}h
                                 </p>
                             </div>
@@ -145,13 +147,15 @@ export function WeeklyRoadmapDisplay({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/40 dark:to-red-950/20 border-orange-200 dark:border-orange-800">
+                <Card className="glass-card border-orange-500/20 dark:border-orange-500/10 hover:border-orange-500/40 transform hover:-translate-y-1 transition-all duration-300">
                     <CardContent className="p-4">
                         <div className="flex items-center gap-3">
-                            <TrendingUp className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                            <div className="p-2 bg-orange-500/10 rounded-lg">
+                                <TrendingUp className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                            </div>
                             <div>
-                                <p className="text-xs font-semibold text-muted-foreground uppercase">Total Weeks</p>
-                                <p className="text-2xl font-bold text-orange-700 dark:text-orange-400">{weeklyPlan.length}</p>
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Weeks</p>
+                                <p className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 dark:from-orange-400 dark:to-red-400 bg-clip-text text-transparent">{weeklyPlan.length}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -169,10 +173,10 @@ export function WeeklyRoadmapDisplay({
                     return (
                         <Card
                             key={index}
-                            className={`bg-gradient-to-br ${getPhaseColor(week.phase, week.week)} border-2 transition-all overflow-hidden hover:shadow-lg ${
+                            className={`glass-card ${getPhaseColor(week.phase, week.week)} border transition-all duration-500 overflow-hidden hover:scale-[1.01] ${
                                 isCompleted
-                                    ? 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20'
-                                    : 'border-border hover:border-gray-400 dark:hover:border-gray-600'
+                                    ? 'border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-500/10 neo-glow'
+                                    : 'border-white/10 hover:border-[#0D5CDF]/50'
                             }`}
                         >
                             <CardHeader className="pb-3">

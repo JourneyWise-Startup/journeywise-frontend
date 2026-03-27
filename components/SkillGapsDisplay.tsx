@@ -96,11 +96,16 @@ export function SkillGapsDisplay({
         );
 
         return (
-            <Card key={gap.skill} className={`border-l-4 transition-all hover:shadow-md ${
-                priority === 'critical' ? 'border-l-red-500 bg-red-50/30 dark:bg-red-950/20' :
-                priority === 'important' ? 'border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-950/20' :
-                'border-l-green-500 bg-green-50/30 dark:bg-green-950/20'
+            <Card key={gap.skill} className={`glass-card border group hover:scale-[1.01] transition-all duration-300 ${
+                priority === 'critical' ? 'border-red-500/30 hover:border-red-500/50' :
+                priority === 'important' ? 'border-yellow-500/30 hover:border-yellow-500/50' :
+                'border-emerald-500/30 hover:border-emerald-500/50'
             }`}>
+                <div className={`h-1.5 w-full bg-gradient-to-r ${
+                    priority === 'critical' ? 'from-red-500 to-orange-500' :
+                    priority === 'important' ? 'from-yellow-500 to-amber-500' :
+                    'from-emerald-500 to-green-500'
+                }`} />
                 <CardContent className="p-4 space-y-3">
                     {/* Header with skill name and badges */}
                     <div className="flex items-start justify-between gap-3">
@@ -140,12 +145,21 @@ export function SkillGapsDisplay({
                     </div>
 
                     {/* Progress Bar */}
-                    <div>
-                        <div className="flex items-center justify-between mb-1">
-                            <p className="text-xs font-semibold text-muted-foreground">Progress to Goal</p>
-                            <p className="text-xs font-bold text-foreground">{progressPercentage}%</p>
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Readiness</p>
+                            <p className="text-sm font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">{progressPercentage}%</p>
                         </div>
-                        <Progress value={progressPercentage} className="h-2" />
+                        <div className="h-2 bg-muted/50 rounded-full overflow-hidden">
+                            <div 
+                                className={`h-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(59,130,246,0.3)] ${
+                                    priority === 'critical' ? 'bg-gradient-to-r from-red-500 to-orange-500 shadow-red-500/20' :
+                                    priority === 'important' ? 'bg-gradient-to-r from-yellow-500 to-amber-500 shadow-yellow-500/20' :
+                                    'bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-500/20'
+                                }`}
+                                style={{ width: `${progressPercentage}%` }}
+                            />
+                        </div>
                     </div>
 
                     {/* Time & Resources */}
@@ -190,45 +204,39 @@ export function SkillGapsDisplay({
             </div>
 
             {/* Overview Stats - Enhanced */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-                <Card className="bg-gradient-to-br from-red-50/80 via-red-50/50 to-red-100/30 dark:from-red-950/40 dark:via-red-950/30 dark:to-red-950/20 border-2 border-red-200/50 dark:border-red-800/40 shadow-sm hover:shadow-md transition-all duration-300 group">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 bg-red-500/10 group-hover:bg-red-500/20 rounded-lg transition-all duration-300">
-                                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-                            </div>
-                            <div className="flex-1">
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">🔴 Critical First</p>
-                                <p className="text-3xl font-bold text-red-700 dark:text-red-400">{criticalGaps.length}</p>
-                            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2">
+                <Card className="glass-card border-red-500/20 hover:border-red-500/40 transform hover:-translate-y-1 transition-all duration-300 group">
+                    <CardContent className="p-5 flex items-center gap-4">
+                        <div className="p-3 bg-red-500/10 rounded-xl group-hover:scale-110 transition-transform">
+                            <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Critical</p>
+                            <p className="text-3xl font-bold bg-gradient-to-r from-red-600 to-orange-600 dark:from-red-400 dark:to-orange-400 bg-clip-text text-transparent">{criticalGaps.length}</p>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-yellow-50/80 via-yellow-50/50 to-yellow-100/30 dark:from-yellow-950/40 dark:via-yellow-950/30 dark:to-yellow-950/20 border-2 border-yellow-200/50 dark:border-yellow-800/40 shadow-sm hover:shadow-md transition-all duration-300 group">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 bg-yellow-500/10 group-hover:bg-yellow-500/20 rounded-lg transition-all duration-300">
-                                <Zap className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                            </div>
-                            <div className="flex-1">
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">⚡ Important</p>
-                                <p className="text-3xl font-bold text-yellow-700 dark:text-yellow-400">{importantGaps.length}</p>
-                            </div>
+                <Card className="glass-card border-yellow-500/20 hover:border-yellow-500/40 transform hover:-translate-y-1 transition-all duration-300 group">
+                    <CardContent className="p-5 flex items-center gap-4">
+                        <div className="p-3 bg-yellow-500/10 rounded-xl group-hover:scale-110 transition-transform">
+                            <Zap className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Important</p>
+                            <p className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 dark:from-yellow-400 dark:to-amber-400 bg-clip-text text-transparent">{importantGaps.length}</p>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-green-50/80 via-green-50/50 to-green-100/30 dark:from-green-950/40 dark:via-green-950/30 dark:to-green-950/20 border-2 border-green-200/50 dark:border-green-800/40 shadow-sm hover:shadow-md transition-all duration-300 group">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 bg-green-500/10 group-hover:bg-green-500/20 rounded-lg transition-all duration-300">
-                                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
-                            </div>
-                            <div className="flex-1">
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">✅ Optional</p>
-                                <p className="text-3xl font-bold text-green-700 dark:text-green-400">{optionalGaps.length}</p>
-                            </div>
+                <Card className="glass-card border-emerald-500/20 hover:border-emerald-500/40 transform hover:-translate-y-1 transition-all duration-300 group">
+                    <CardContent className="p-5 flex items-center gap-4">
+                        <div className="p-3 bg-emerald-500/10 rounded-xl group-hover:scale-110 transition-transform">
+                            <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Optional</p>
+                            <p className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 dark:from-emerald-400 dark:to-green-400 bg-clip-text text-transparent">{optionalGaps.length}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -280,24 +288,27 @@ export function SkillGapsDisplay({
             )}
 
             {/* Total Hours Summary - Enhanced */}
-            <Card className="bg-gradient-to-r from-cyan-50/80 via-blue-50/50 to-cyan-100/30 dark:from-cyan-950/40 dark:via-blue-950/30 dark:to-cyan-950/20 border-2 border-cyan-200/50 dark:border-cyan-800/40 shadow-lg hover:shadow-xl transition-all duration-300 group">
-                <CardContent className="p-6 space-y-2">
-                    <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className="text-2xl">🎓</span>
-                                <h4 className="font-bold text-lg text-foreground">Total Learning Path</h4>
+            <Card className="glass-panel border-cyan-500/20 dark:border-cyan-500/10 neo-glow overflow-hidden relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <CardContent className="p-8 relative z-10">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div className="flex-1 text-center md:text-left">
+                            <div className="flex items-center justify-center md:justify-start gap-4 mb-3">
+                                <div className="p-3 bg-cyan-500/10 rounded-2xl">
+                                    <Award className="w-8 h-8 text-cyan-600 dark:text-cyan-400" />
+                                </div>
+                                <h4 className="text-2xl font-bold text-foreground">Complete Mastery Journey</h4>
                             </div>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                                Realistic estimate to master all skill gaps at 10-15 hours/week of focused learning
+                            <p className="text-base text-muted-foreground leading-relaxed max-w-xl">
+                                Based on your AI-detected skill gaps, this is your optimized path to {careerGoal}. We recommend dedicating <span className="font-bold text-foreground">12-15 hours per week</span> for maximum retention.
                             </p>
                         </div>
-                        <div className="text-right space-y-1 flex-shrink-0">
-                            <p className="text-4xl font-bold text-cyan-700 dark:text-cyan-400 tracking-tight">
+                        <div className="text-center md:text-right p-6 bg-white/5 dark:bg-black/20 rounded-2xl border border-white/10 dark:border-white/5 backdrop-blur-sm min-w-[200px]">
+                            <p className="text-5xl font-extrabold bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-400 dark:to-blue-400 bg-clip-text text-transparent tracking-tighter mb-1">
                                 ~{skillGaps.reduce((sum, g) => sum + (g.estimatedHoursToMastery || 40), 0)}h
                             </p>
-                            <p className="text-xs text-muted-foreground font-medium">
-                                ≈ {Math.round(skillGaps.reduce((sum, g) => sum + (g.estimatedHoursToMastery || 40), 0) / 12)} weeks
+                            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest group-hover:text-cyan-500 transition-colors">
+                                approx {Math.round(skillGaps.reduce((sum, g) => sum + (g.estimatedHoursToMastery || 40), 0) / 12)} weeks
                             </p>
                         </div>
                     </div>

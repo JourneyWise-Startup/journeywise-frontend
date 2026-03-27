@@ -179,7 +179,7 @@ export default function RoadmapDetail() {
         if (!token) return;
 
         const isCompleted = completedWeeks.includes(weekIndex);
-        const endpoint = isCompleted 
+        const endpoint = isCompleted
             ? `${process.env.NEXT_PUBLIC_API_URL}/roadmap/${id}/week/${weekIndex}/incomplete`
             : `${process.env.NEXT_PUBLIC_API_URL}/roadmap/${id}/week/${weekIndex}/complete`;
 
@@ -206,7 +206,7 @@ export default function RoadmapDetail() {
                     progress: newProgress,
                     completedWeeks: newCompletedWeeks
                 }));
-                
+
                 // Toast notification
                 if (newProgress === 100) {
                     toast.success('🎉 Congratulations! You completed the roadmap!');
@@ -273,35 +273,35 @@ export default function RoadmapDetail() {
 
     // Merge skill gaps from both sources (detail from monthlyPlan + strings from data)
     // If we have detailed skill gaps from monthlyPlan, use those; otherwise parse from strings
-    const enhancedSkillGaps = skillGapsDetails.length > 0 
-      ? skillGapsDetails 
-      : skillGapStrings.map((gapStr: string) => {
-          // Parse string like "JavaScript (novice → intermediate)" into object
-          const match = gapStr.match(/^(.+?)\s*\((\w+)\s*→\s*(\w+)\)$/);
-          if (match) {
+    const enhancedSkillGaps = skillGapsDetails.length > 0
+        ? skillGapsDetails
+        : skillGapStrings.map((gapStr: string) => {
+            // Parse string like "JavaScript (novice → intermediate)" into object
+            const match = gapStr.match(/^(.+?)\s*\((\w+)\s*→\s*(\w+)\)$/);
+            if (match) {
+                return {
+                    skill: match[1],
+                    currentLevel: match[2],
+                    requiredLevel: match[3],
+                    difficulty: 'medium',
+                    estimatedHoursToMastery: 50,
+                    whyNeeded: `${match[1]} is required for your target role`,
+                    learnThis: `Master ${match[1]} from ${match[2]} to ${match[3]} level`,
+                    companyRequirement: data.targetCompany ? true : false,
+                    beginnerFriendlyResource: `Official ${match[1]} Documentation`
+                };
+            }
             return {
-              skill: match[1],
-              currentLevel: match[2],
-              requiredLevel: match[3],
-              difficulty: 'medium',
-              estimatedHoursToMastery: 50,
-              whyNeeded: `${match[1]} is required for your target role`,
-              learnThis: `Master ${match[1]} from ${match[2]} to ${match[3]} level`,
-              companyRequirement: data.targetCompany ? true : false,
-              beginnerFriendlyResource: `Official ${match[1]} Documentation`
+                skill: gapStr,
+                currentLevel: 'beginner',
+                requiredLevel: 'intermediate',
+                difficulty: 'medium',
+                estimatedHoursToMastery: 40,
+                whyNeeded: 'This skill is important for your target role',
+                learnThis: `Learn ${gapStr}`,
+                companyRequirement: false,
+                beginnerFriendlyResource: 'Official Documentation'
             };
-          }
-          return {
-            skill: gapStr,
-            currentLevel: 'beginner',
-            requiredLevel: 'intermediate',
-            difficulty: 'medium',
-            estimatedHoursToMastery: 40,
-            whyNeeded: 'This skill is important for your target role',
-            learnThis: `Learn ${gapStr}`,
-            companyRequirement: false,
-            beginnerFriendlyResource: 'Official Documentation'
-          };
         });
 
     // Helper to get nice colors based on index or type
@@ -318,7 +318,7 @@ export default function RoadmapDetail() {
     // Context-aware resource mapping based on topic with specific, direct URLs
     const getContextAwareResources = (weekTitle: string, weekFocus?: string) => {
         const topicText = `${weekTitle} ${weekFocus || ''}`.toLowerCase();
-        
+
         // Comprehensive topic-specific resource mappings with SPECIFIC, DIRECT URLs
         const resourceMap: { [key: string]: any[] } = {
             // ============ JAVASCRIPT & BASICS ============
@@ -492,12 +492,12 @@ export default function RoadmapDetail() {
                             {data.targetCompany && <span className="block text-2xl md:text-3xl mt-2 font-medium text-muted-foreground">at <span className="text-cyan-600 dark:text-cyan-400">{data.targetCompany}</span></span>}
                         </h1>
                         <p className="text-lg text-muted-foreground max-w-3xl leading-relaxed">
-                            {data.isResumeBased 
+                            {data.isResumeBased
                                 ? 'A tailored path designed to take you from your current skills to your dream career.'
                                 : 'A general industry-standard roadmap based on market research. ' + (data.targetCompany ? `Customized for ${data.targetCompany}.` : '')
                             }
                         </p>
-                        
+
                         {!data.isResumeBased && (
                             <div className="mt-6 p-4 bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-800/50 rounded-lg">
                                 <p className="text-sm text-blue-700 dark:text-blue-300">
@@ -505,7 +505,7 @@ export default function RoadmapDetail() {
                                 </p>
                             </div>
                         )}
-                        
+
                         {/* Progress Bar */}
                         <div className="mt-6 max-w-2xl">
                             <div className="flex items-center justify-between mb-2">
@@ -513,7 +513,7 @@ export default function RoadmapDetail() {
                                 <span className="text-2xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-400 dark:to-blue-400 bg-clip-text text-transparent">{data.progress || 0}%</span>
                             </div>
                             <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner">
-                                <div 
+                                <div
                                     className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-full transition-all duration-500 shadow-lg shadow-cyan-500/40"
                                     style={{ width: `${data.progress || 0}%` }}
                                 />
@@ -532,48 +532,56 @@ export default function RoadmapDetail() {
                     </div>
 
                     {/* Status Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {/* Coaching Message & Resume Analysis */}
                         {data.resumeAnalysis && (
-                            <Card className="md:col-span-2 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-blue-200 dark:border-blue-800 shadow-lg">
+                            <Card className="md:col-span-2 glass-panel border-[#0D5CDF]/20 dark:border-[#0D5CDF]/10 neo-glow relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#0D5CDF]/5 rounded-full blur-3xl group-hover:bg-[#0D5CDF]/10 transition-colors duration-500" />
                                 <CardHeader>
-                                    <CardTitle className="flex items-center gap-2 text-xl text-blue-700 dark:text-blue-400">
-                                        <Lightbulb className="w-5 h-5" /> Your Coaching Plan
+                                    <CardTitle className="flex items-center gap-2 text-xl text-[#0D5CDF] dark:text-[#4A90E2]">
+                                        <div className="p-2 bg-[#0D5CDF]/10 rounded-lg">
+                                            <Lightbulb className="w-5 h-5" />
+                                        </div>
+                                        Your AI Coaching Analysis
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent className="space-y-4">
+                                <CardContent className="space-y-6">
                                     {/* Resume Analysis */}
                                     <div>
-                                        <div className="inline-block mb-2">
-                                            <Badge className="bg-blue-600 text-white">
-                                                {data.resumeAnalysis.detectedType?.replace(/-/g, ' ').toUpperCase() || 'ANALYZED'} BACKGROUND
+                                        <div className="inline-block mb-3">
+                                            <Badge className="bg-[#0D5CDF] hover:bg-[#0D5CDF]/90 text-white border-none shadow-lg shadow-blue-500/20 px-3 py-1">
+                                                {data.resumeAnalysis.detectedType?.replace(/-/g, ' ').toUpperCase() || 'ANALYZED'} PROFILE
                                             </Badge>
                                         </div>
-                                        <p className="text-sm text-foreground/80 leading-relaxed">
-                                            <strong>{data.resumeAnalysis.currentBackground}</strong>
+                                        <p className="text-base text-foreground/90 font-medium leading-relaxed">
+                                            {data.resumeAnalysis.currentBackground}
                                         </p>
                                     </div>
 
                                     {/* Coaching Message */}
                                     {data.coachingMessage && (
-                                        <div className="space-y-3 pt-3 border-t border-blue-200 dark:border-blue-800">
-                                            <div>
-                                                <p className="text-sm font-semibold text-foreground mb-1">💡 Coach's Assessment:</p>
-                                                <p className="text-sm text-muted-foreground">{data.coachingMessage.firstThoughts}</p>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div className="p-2 bg-green-50 dark:bg-green-950/20 rounded border border-green-200 dark:border-green-800">
-                                                    <p className="text-xs font-semibold text-green-700 dark:text-green-400 mb-0.5">✅ Your Advantage</p>
-                                                    <p className="text-xs text-muted-foreground">{data.coachingMessage.goodNews}</p>
+                                        <div className="space-y-4 pt-4 border-t border-white/10 dark:border-white/5">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div className="p-4 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-xl border border-emerald-500/20 dark:border-emerald-500/10 hover:border-emerald-500/40 transition-colors group/item">
+                                                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                                        Competitive Edge
+                                                    </p>
+                                                    <p className="text-sm text-foreground/80 leading-relaxed font-medium">{data.coachingMessage.goodNews}</p>
                                                 </div>
-                                                <div className="p-2 bg-amber-50 dark:bg-amber-950/20 rounded border border-amber-200 dark:border-amber-800">
-                                                    <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-0.5">⚡ Main Focus</p>
-                                                    <p className="text-xs text-muted-foreground">{data.coachingMessage.challenge}</p>
+                                                <div className="p-4 bg-amber-500/5 dark:bg-amber-500/10 rounded-xl border border-amber-500/20 dark:border-amber-500/10 hover:border-amber-500/40 transition-colors group/item">
+                                                    <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                                        <Zap className="w-3.5 h-3.5" />
+                                                        Primary Focus
+                                                    </p>
+                                                    <p className="text-sm text-foreground/80 leading-relaxed font-medium">{data.coachingMessage.challenge}</p>
                                                 </div>
                                             </div>
-                                            <div className="p-3 bg-blue-100/50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-                                                <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 mb-1">📅 Realistic Timeline</p>
-                                                <p className="text-sm font-bold text-blue-800 dark:text-blue-300">{data.coachingMessage.timelineReality}</p>
+                                            <div className="p-4 bg-[#0D5CDF]/5 dark:bg-[#0D5CDF]/10 rounded-xl border border-[#0D5CDF]/20 dark:border-[#0D5CDF]/10">
+                                                <p className="text-xs font-bold text-[#0D5CDF] dark:text-[#4A90E2] uppercase tracking-widest mb-1">Expected Timeline</p>
+                                                <p className="text-lg font-bold bg-gradient-to-r from-[#0D5CDF] to-[#00D2FF] bg-clip-text text-transparent">
+                                                    {data.coachingMessage.timelineReality}
+                                                </p>
                                             </div>
                                         </div>
                                     )}
@@ -581,104 +589,51 @@ export default function RoadmapDetail() {
                             </Card>
                         )}
 
-                        {/* Readiness Score Display - Only show for resume-based roadmaps */}
+                        {/* Readiness Score Display */}
                         {data.isResumeBased && (
-                            <div className={data.resumeAnalysis ? '' : 'md:col-span-2 lg:col-span-2'}>
-                                <ReadinessScoreDisplay 
-                                    roadmapId={id as string} 
-                                    token={localStorage.getItem('token') || ''}
+                            <div className={data.resumeAnalysis ? 'lg:col-span-1' : 'md:col-span-2 lg:col-span-3'}>
+                                <ReadinessScoreDisplay
+                                    roadmapId={id as string}
+                                    token={typeof window !== 'undefined' ? localStorage.getItem('token') || '' : ''}
                                     initialScore={data.readinessScore || 0}
-                                    onScoreUpdate={(newData) => {
-                                        // Handle any updates if needed
-                                    }}
                                 />
                             </div>
                         )}
-                        
-                        {/* Generic Roadmap Info - Only show for non-resume-based roadmaps */}
-                        {!data.isResumeBased && (
-                            <Card className="md:col-span-2 lg:col-span-2 bg-gradient-to-br from-amber-50/50 to-orange-50/50 dark:from-amber-950/30 dark:to-orange-950/30 border-amber-200/50 dark:border-amber-800/50 hover:border-amber-300 dark:hover:border-amber-700 transition-all">
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2 text-amber-900 dark:text-amber-100">
-                                        <Lightbulb className="w-5 h-5" />
-                                        General Industry Roadmap
-                                    </CardTitle>
-                                    <CardDescription className="text-amber-800/70 dark:text-amber-300/70">
-                                        This roadmap is based on industry market research and best practices
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="p-3 bg-white dark:bg-slate-900/50 rounded border border-amber-200/30 dark:border-amber-800/30">
-                                            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">📋 Based On</p>
-                                            <p className="text-sm font-medium text-foreground">Industry Standards</p>
-                                        </div>
-                                        <div className="p-3 bg-white dark:bg-slate-900/50 rounded border border-amber-200/30 dark:border-amber-800/30">
-                                            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">🎯 Focus</p>
-                                            <p className="text-sm font-medium text-foreground">{data.careerGoal}</p>
-                                        </div>
-                                        {data.targetCompany && (
-                                            <div className="p-3 bg-white dark:bg-slate-900/50 rounded border border-blue-200/30 dark:border-blue-800/30 col-span-2">
-                                                <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 mb-1">🏢 Tailored For</p>
-                                                <p className="text-sm font-medium text-foreground">{data.targetCompany}</p>
-                                            </div>
-                                        )}
+
+                        {/* Right Side Stats Cards (Mobile/Tablet stacking) */}
+                        <div className={`grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4 ${data.isResumeBased ? 'lg:col-span-1' : 'md:col-span-2 lg:col-span-3'}`}>
+                            <Card className="glass-card border-blue-500/20 dark:border-blue-500/10 hover:border-blue-500/40 transition-all duration-300 group">
+                                <CardContent className="p-5 flex items-center gap-4">
+                                    <div className="p-3 bg-blue-500/10 rounded-xl group-hover:scale-110 transition-transform">
+                                        <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                                     </div>
-                                    <div className="p-3 bg-blue-50/50 dark:bg-blue-950/30 rounded border border-blue-200/50 dark:border-blue-800/50">
-                                        <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 flex items-center gap-1.5 mb-1">
-                                            ✨ Personalization
-                                        </p>
-                                        <p className="text-sm text-blue-800/70 dark:text-blue-300/70">
-                                            Upload your resume to unlock personalized skill gap analysis, readiness scoring, and tailored recommendations.
-                                        </p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
-                        
-                        {/* Right Side Stats Cards */}
-                        <div className="grid grid-cols-1 gap-4">
-                            <Card className="bg-gradient-to-br from-blue-50 to-blue-50/30 dark:from-blue-950/40 dark:to-blue-950/20 border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 transition-all shadow-sm hover:shadow-blue-500/10 group">
-                                <CardContent className="p-6 flex flex-col justify-center h-full">
-                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 opacity-70">Timeline</p>
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-blue-600/10 rounded-lg">
-                                            <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                                        </div>
-                                        <div>
-                                            <p className="text-2xl font-bold text-foreground">{timelineToGoal}</p>
-                                            <p className="text-xs text-muted-foreground mt-1">Estimated duration</p>
-                                        </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Duration</p>
+                                        <p className="text-xl font-bold text-foreground">{timelineToGoal}</p>
                                     </div>
                                 </CardContent>
                             </Card>
 
-                            <Card className="bg-gradient-to-br from-emerald-50 to-emerald-50/30 dark:from-emerald-950/40 dark:to-emerald-950/20 border-emerald-200 dark:border-emerald-800 hover:border-emerald-400 dark:hover:border-emerald-600 transition-all shadow-sm hover:shadow-emerald-500/10 group">
-                                <CardContent className="p-6 flex flex-col justify-center h-full">
-                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 opacity-70">Study Plan</p>
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-emerald-600/10 rounded-lg">
-                                            <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                                        </div>
-                                        <div>
-                                            <p className="text-2xl font-bold text-foreground">{weeklyPlan.length}</p>
-                                            <p className="text-xs text-muted-foreground mt-1">Weekly lessons</p>
-                                        </div>
+                            <Card className="glass-card border-emerald-500/20 dark:border-emerald-500/10 hover:border-emerald-500/40 transition-all duration-300 group">
+                                <CardContent className="p-5 flex items-center gap-4">
+                                    <div className="p-3 bg-emerald-500/10 rounded-xl group-hover:scale-110 transition-transform">
+                                        <BookOpen className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Lessons</p>
+                                        <p className="text-xl font-bold text-foreground">{weeklyPlan.length} Weeks</p>
                                     </div>
                                 </CardContent>
                             </Card>
 
-                            <Card className="bg-gradient-to-br from-purple-50 to-purple-50/30 dark:from-purple-950/40 dark:to-purple-950/20 border-purple-200 dark:border-purple-800 hover:border-purple-400 dark:hover:border-purple-600 transition-all shadow-sm hover:shadow-purple-500/10 group">
-                                <CardContent className="p-6 flex flex-col justify-center h-full">
-                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 opacity-70">Projects</p>
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-purple-600/10 rounded-lg">
-                                            <Trophy className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                                        </div>
-                                        <div>
-                                            <p className="text-2xl font-bold text-foreground">{practiceProjects.length}</p>
-                                            <p className="text-xs text-muted-foreground mt-1">Hands-on builds</p>
-                                        </div>
+                            <Card className="glass-card border-purple-500/20 dark:border-purple-500/10 hover:border-purple-500/40 transition-all duration-300 group">
+                                <CardContent className="p-5 flex items-center gap-4">
+                                    <div className="p-3 bg-purple-500/10 rounded-xl group-hover:scale-110 transition-transform">
+                                        <Trophy className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Projects</p>
+                                        <p className="text-xl font-bold text-foreground">{practiceProjects.length} Builds</p>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -753,11 +708,11 @@ export default function RoadmapDetail() {
                                                             <p className="text-sm text-muted-foreground mb-4">
                                                                 Get AI-powered company insights including interview patterns, culture, and insider tips tailored to this company.
                                                             </p>
-                                                            <Button 
+                                                            <Button
                                                                 onClick={() => {
                                                                     setCompanyInput(data.targetCompany);
                                                                     handleFetchInsights();
-                                                                }} 
+                                                                }}
                                                                 disabled={fetchingInsights}
                                                                 className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white"
                                                             >
@@ -990,28 +945,28 @@ export default function RoadmapDetail() {
                     </div>
                 )}
 
-            {/* Scroll to Top Button - Fixed Position */}
-            {showScrollTop && (
-                <button
-                    onClick={scrollToTop}
-                    className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 p-3 sm:p-4 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg hover:shadow-2xl hover:shadow-violet-500/50 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 hover:scale-110 active:scale-95 border-2 border-violet-500/60 group"
-                    aria-label="Scroll to top"
-                >
-                    <svg
-                        className="w-5 h-5 sm:w-6 sm:h-6 group-hover:-translate-y-1 transition-transform"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                {/* Scroll to Top Button - Fixed Position */}
+                {showScrollTop && (
+                    <button
+                        onClick={scrollToTop}
+                        className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 p-3 sm:p-4 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg hover:shadow-2xl hover:shadow-violet-500/50 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 hover:scale-110 active:scale-95 border-2 border-violet-500/60 group"
+                        aria-label="Scroll to top"
                     >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2.5}
-                            d="M5 10l7-7m0 0l7 7m-7-7v18"
-                        />
-                    </svg>
-                </button>
-            )}
+                        <svg
+                            className="w-5 h-5 sm:w-6 sm:h-6 group-hover:-translate-y-1 transition-transform"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2.5}
+                                d="M5 10l7-7m0 0l7 7m-7-7v18"
+                            />
+                        </svg>
+                    </button>
+                )}
             </div>
         </div>
     );
