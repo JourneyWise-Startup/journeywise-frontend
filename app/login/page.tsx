@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from 'sonner';
 import { Loader2, Mail, Lock, User, Eye, EyeOff, CheckCircle2, Rocket, ArrowRight, Zap, Target, TrendingUp, Shield } from 'lucide-react';
 import Link from 'next/link';
+import { Logo } from '@/components/Logo';
 
 function AuthForm() {
     const router = useRouter();
@@ -92,6 +93,9 @@ function AuthForm() {
                 {/* Left Side - Features (Hidden on Mobile) */}
                 <div className="hidden lg:flex flex-col justify-center space-y-8 animate-in fade-in slide-in-from-left-8 duration-700">
                     <div>
+                        <div className="mb-6 -ml-3">
+                            <Logo className="h-12 lg:h-14 w-auto text-blue-500 drop-shadow-xl" />
+                        </div>
                         <h1 className="text-5xl lg:text-6xl font-black mb-4 leading-tight">
                             <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
                                 Your Career
@@ -138,9 +142,7 @@ function AuthForm() {
                     {/* Mobile Header */}
                     <div className="lg:hidden text-center mb-8 space-y-2">
                         <div className="flex justify-center mb-3">
-                            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                                <Rocket className="h-6 w-6 text-white" />
-                            </div>
+                            <Logo iconOnly={true} className="h-16 w-16 text-blue-500 drop-shadow-lg filter drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
                         </div>
                         <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                             JourneyWise
