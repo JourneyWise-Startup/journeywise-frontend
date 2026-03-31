@@ -12,6 +12,7 @@ import {
 import { useTheme } from 'next-themes';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Logo } from '@/components/Logo';
+import { getAvatarUrl } from '@/lib/utils';
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -166,7 +167,7 @@ export default function Navbar() {
                                 </Link>
                                 <div className="flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 rounded-lg bg-accent/30 border border-border hover:border-primary/30 transition-all duration-200">
                                     <Avatar className="h-7 w-7 md:h-8 md:w-8 border border-border">
-                                        <AvatarImage src={user.avatar} className="object-cover" />
+                                        <AvatarImage src={getAvatarUrl(user.avatar)} className="object-cover" />
                                         <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-500 text-white text-[10px] md:text-xs font-bold">
                                             {user.name?.charAt(0).toUpperCase() || 'U'}
                                         </AvatarFallback>

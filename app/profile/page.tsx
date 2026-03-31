@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from 'sonner';
 import { Loader2, User, GraduationCap, Briefcase, Share2, Save, Camera } from 'lucide-react';
+import { getAvatarUrl } from '@/lib/utils';
 
 interface UserProfile {
     bio: string;
@@ -255,7 +256,7 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-6">
                         <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
                             <Avatar className="h-20 md:h-24 w-20 md:w-24 border-2 border-cyan-500/30 shadow-lg shadow-cyan-500/10 group-hover:border-cyan-500/50 transition-all">
-                                <AvatarImage src={formData.avatar || user?.avatar} className="object-cover" />
+                                <AvatarImage src={getAvatarUrl(formData.avatar || user?.avatar)} className="object-cover" />
                                 <AvatarFallback className="text-xl md:text-2xl font-bold bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400">
                                     {userName.charAt(0).toUpperCase()}
                                 </AvatarFallback>
