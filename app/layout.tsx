@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import AuthGuard from "@/components/AuthGuard";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/theme-provider";
+import NavFooterWrapper from "@/components/NavFooterWrapper";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,11 +29,9 @@ export default function RootLayout({
         >
           <AuthProvider>
             <AuthGuard>
-              <Navbar />
-              <main className="min-h-screen bg-background text-foreground">
+              <NavFooterWrapper>
                 {children}
-              </main>
-              <Footer />
+              </NavFooterWrapper>
             </AuthGuard>
           </AuthProvider>
         </ThemeProvider>
