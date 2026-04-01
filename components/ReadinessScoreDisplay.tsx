@@ -246,21 +246,36 @@ export function ReadinessScoreDisplay({
     : '0';
 
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Status Badge - Enhanced */}
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {!isActive && (
-        <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border-2 border-amber-200/60 dark:border-amber-800/40 rounded-lg flex items-center gap-3 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border-2 border-amber-200/60 dark:border-amber-800/40 rounded-xl flex items-center gap-3 shadow-sm hover:shadow-md transition-all duration-300">
           <div className="p-2 bg-amber-500/10 rounded-lg flex-shrink-0">
             <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
           </div>
           <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-            <strong>Away from learning:</strong> Your readiness score reflects active learning. Keep engaging with the roadmap to unlock your full potential! 🚀
+            <strong>Away from learning:</strong> Your readiness score reflects active learning. Keep engaging with the roadmap to unlock your full potential.
           </p>
         </div>
       )}
 
-      {/* Two Column Layout */}
-      <div className="grid md:grid-cols-2 gap-6">
+      {/* Core principle — top, compact on wide screens so scores stay the focus */}
+      <div className="relative overflow-hidden rounded-xl border border-blue-500/25 dark:border-blue-500/15 bg-gradient-to-r from-blue-500/[0.08] via-cyan-500/[0.05] to-transparent px-4 py-3.5 sm:px-5 sm:py-4">
+        <div className="pointer-events-none absolute right-0 top-1/2 h-24 w-24 -translate-y-1/2 translate-x-1/3 rounded-full bg-cyan-500/10 blur-2xl" />
+        <div className="relative flex flex-col gap-2 md:flex-row md:items-start md:gap-5">
+          <div className="shrink-0">
+            <span className="inline-flex items-center rounded-md bg-blue-600/15 dark:bg-blue-400/10 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-300 ring-1 ring-blue-500/20">
+              Core principle
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-blue-950/90 dark:text-blue-100/90 leading-relaxed md:pt-0.5">
+            Your readiness score is a living metric—it grows through{' '}
+            <span className="font-semibold text-foreground">consistent daily effort</span>. Completing tasks, shipping projects, and using resources moves you toward your{' '}
+            <span className="font-semibold tabular-nums">99/99</span> goal.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-5 sm:gap-6 md:grid-cols-2 lg:gap-8">
         
         {/* INITIAL ASSESSMENT CARD - Enhanced */}
         <Card className="glass-card border-blue-500/20 dark:border-blue-500/10 hover:border-blue-500/40 transform hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
@@ -364,7 +379,8 @@ export function ReadinessScoreDisplay({
             </div>
           </CardContent>
         </Card>
-      </div>      {/* ENGAGEMENT METRICS CARD - Enhanced */}
+      </div>
+      {/* ENGAGEMENT METRICS CARD - Enhanced */}
       {readinessData.engagementMetrics && (
         <Card className="glass-card border-violet-500/20 dark:border-violet-500/10 hover:border-violet-500/40 transform hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
           <CardHeader className="pb-3">
@@ -475,16 +491,6 @@ export function ReadinessScoreDisplay({
           </CardContent>
         </Card>
       )}
-
-      {/* INFO FOOTER */}
-      <div className="p-6 bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/20 dark:border-blue-500/10 rounded-2xl relative overflow-hidden group">
-        <div className="absolute -left-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl opacity-50 group-hover:opacity-100 transition-opacity" />
-        <p className="text-xs text-blue-800 dark:text-blue-300 leading-relaxed relative z-10 font-medium">
-          <strong className="text-blue-600 dark:text-blue-400 font-bold uppercase tracking-widest mr-2">Core Principle:</strong> 
-          Your readiness score is a living metric. It only grows through <span className="text-foreground font-bold underline decoration-blue-500/30">consistent daily effort</span>. 
-          Completing tasks, building projects, and engaging with resources are the only ways to climb towards your 99/99 goal.
-        </p>
-      </div>
     </div>
   );
 }

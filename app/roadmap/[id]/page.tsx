@@ -1,15 +1,18 @@
 "use client"
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import {
-    CheckCircle2, XCircle, ArrowRight, BookOpen, Ban, Target, Zap,
-    Lightbulb, LinkIcon, Calendar, Trophy, ChevronRight, Building2,
-    Users, MessageSquare, Code2, Layers, BrainCircuit, Star, Search, Trash2
+    CheckCircle2, BookOpen, Zap,
+    Lightbulb, Calendar, CalendarDays, Trophy, Building2,
+    Code2, Layers, BrainCircuit, Search, Trash2,
+    ChevronLeft, LayoutDashboard, Sparkles, GraduationCap,
+    Crosshair, BarChart3, Wrench, Library
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { ReadinessScoreDisplay } from "@/components/ReadinessScoreDisplay";
@@ -24,17 +27,21 @@ export default function RoadmapDetail() {
     const { id } = useParams();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState("weekly");
     const [deleting, setDeleting] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [completedWeeks, setCompletedWeeks] = useState<number[]>([]);
     const [updatingProgress, setUpdatingProgress] = useState(false);
+    const [readinessNonce, setReadinessNonce] = useState(0);
+    const [fetchVersion, setFetchVersion] = useState(0);
 
     // Company Insights State
     const [companyInput, setCompanyInput] = useState("");
     const [fetchingInsights, setFetchingInsights] = useState(false);
     const [dynamicInsights, setDynamicInsights] = useState<any>(null);
+    const companyInsightsAutoFetchConsumed = useRef(false);
 
     const router = useRouter();
 
@@ -54,91 +61,162 @@ export default function RoadmapDetail() {
     };
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (!token) { router.push('/login'); return; }
-
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/roadmap/${id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-            .then(res => res.json())
-            .then(data => {
-                setData(data);
-                // Load completed weeks from data
-                setCompletedWeeks(data.completedWeeks || []);
-                // If initial data has company insights, set them
-                if (data.companyInsights) {
-                    setDynamicInsights(data.companyInsights);
-                    setActiveTab("insider"); // Open insider tab by default if it exists
-                }
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error(err);
-                setLoading(false);
-            });
+        companyInsightsAutoFetchConsumed.current = false;
+        setLoadError(null);
+        setDynamicInsights(null);
+        setCompanyInput("");
+        setActiveTab("weekly");
     }, [id]);
 
-    // Auto-fetch company insights if company was provided during upload
     useEffect(() => {
-        if (data?.targetCompany && !dynamicInsights && !fetchingInsights) {
-            // Auto-fetch insights for the provided company
-            const token = localStorage.getItem('token');
-            if (!token) return;
+        const token = localStorage.getItem('token');
+        if (!token) {
+            router.push('/login');
+            return;
+        }
 
-            setFetchingInsights(true);
-            fetch(`${process.env.NEXT_PUBLIC_API_URL}/roadmap/company-insights`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    company: data.targetCompany,
-                    role: data.careerGoal
-                })
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (!baseUrl) {
+            setLoadError('API URL is not configured (NEXT_PUBLIC_API_URL).');
+            setLoading(false);
+            return;
+        }
+
+        let cancelled = false;
+
+        (async () => {
+            try {
+                setLoading(true);
+                setLoadError(null);
+                const res = await fetch(`${baseUrl}/roadmap/${id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                let body: any = null;
+                try {
+                    body = await res.json();
+                } catch {
+                    body = null;
+                }
+                if (cancelled) return;
+
+                if (res.status === 401) {
+                    localStorage.removeItem('token');
+                    router.push('/login');
+                    return;
+                }
+
+                if (!res.ok) {
+                    setData(null);
+                    setCompletedWeeks([]);
+                    const msg =
+                        typeof body?.message === 'string'
+                            ? body.message
+                            : res.status === 403
+                              ? 'You do not have access to this roadmap.'
+                              : 'Could not load this roadmap.';
+                    setLoadError(msg);
+                    return;
+                }
+
+                setData(body);
+                setCompletedWeeks(body.completedWeeks || []);
+                if (body.companyInsights) {
+                    setDynamicInsights(body.companyInsights);
+                    setCompanyInput(body.targetCompany || '');
+                    setActiveTab('insider');
+                }
+            } catch (e) {
+                if (!cancelled) {
+                    console.error(e);
+                    setData(null);
+                    setLoadError('Network error. Check your connection and try again.');
+                }
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [id, router, fetchVersion]);
+
+    // Auto-fetch company insights once per roadmap when target company is set but no stored insights yet
+    useEffect(() => {
+        if (!data?.targetCompany || dynamicInsights || fetchingInsights) return;
+        if (data.companyInsights) return;
+        if (companyInsightsAutoFetchConsumed.current) return;
+
+        const token = localStorage.getItem('token');
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (!token || !baseUrl) return;
+
+        companyInsightsAutoFetchConsumed.current = true;
+        setFetchingInsights(true);
+
+        fetch(`${baseUrl}/roadmap/company-insights`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                company: data.targetCompany,
+                role: data.careerGoal,
+            }),
+        })
+            .then(async (res) => {
+                if (!res.ok) {
+                    const errBody = await res.json().catch(() => ({}));
+                    console.warn('Company insights request failed:', errBody?.message || res.status);
+                    return null;
+                }
+                return res.json();
             })
-                .then(res => res.json())
-                .then(insights => {
+            .then((insights) => {
+                if (insights && typeof insights === 'object') {
                     setDynamicInsights(insights);
                     setCompanyInput(data.targetCompany);
-                })
-                .catch(err => {
-                    console.error('Error fetching company insights:', err);
-                })
-                .finally(() => {
-                    setFetchingInsights(false);
-                });
-        }
-    }, [data?.targetCompany, data?.careerGoal, dynamicInsights, fetchingInsights]);
+                }
+            })
+            .catch((err) => console.error('Error fetching company insights:', err))
+            .finally(() => setFetchingInsights(false));
+    }, [data, data?.targetCompany, data?.companyInsights, data?.careerGoal, dynamicInsights, fetchingInsights]);
 
     const handleFetchInsights = async () => {
-        if (!companyInput.trim()) return;
-        setFetchingInsights(true);
+        if (!companyInput.trim() || !data) return;
         const token = localStorage.getItem('token');
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (!token || !baseUrl) {
+            toast.error('Not signed in or API URL missing.');
+            return;
+        }
 
+        setFetchingInsights(true);
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/roadmap/company-insights`, {
+            const res = await fetch(`${baseUrl}/roadmap/company-insights`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    company: companyInput,
-                    role: data.careerGoal // Use the career goal from roadmap as role
-                })
+                    company: companyInput.trim(),
+                    role: data.careerGoal,
+                }),
             });
+            const body = await res.json().catch(() => ({}));
 
-            if (res.ok) {
-                const insights = await res.json();
-                setDynamicInsights(insights);
-                toast.success(`Insights generated for ${companyInput}`);
+            if (res.ok && body && typeof body === 'object' && !('statusCode' in body && body.statusCode >= 400)) {
+                setDynamicInsights(body);
+                toast.success(`Insights generated for ${companyInput.trim()}`);
             } else {
-                toast.error("Failed to generate insights. Please try again.");
+                const msg = typeof body?.message === 'string' ? body.message : 'Failed to generate insights.';
+                toast.error(msg);
             }
         } catch (error) {
             console.error(error);
-            toast.error("An error occurred.");
+            toast.error('An error occurred.');
         } finally {
             setFetchingInsights(false);
         }
@@ -146,24 +224,27 @@ export default function RoadmapDetail() {
 
     const handleDeleteRoadmap = async () => {
         if (!id) return;
-        setDeleting(true);
         const token = localStorage.getItem('token');
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (!token || !baseUrl) {
+            toast.error('Cannot delete: missing session or API URL.');
+            setShowDeleteDialog(false);
+            return;
+        }
 
+        setDeleting(true);
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/roadmap/${id}`, {
+            const res = await fetch(`${baseUrl}/roadmap/${id}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { Authorization: `Bearer ${token}` },
             });
+            const body = await res.json().catch(() => ({}));
 
             if (res.ok) {
                 toast.success('Roadmap deleted successfully');
-                setTimeout(() => {
-                    router.push('/dashboard');
-                }, 1000);
+                setTimeout(() => router.push('/dashboard'), 1000);
             } else {
-                toast.error('Failed to delete roadmap');
+                toast.error(typeof body?.message === 'string' ? body.message : 'Failed to delete roadmap');
             }
         } catch (error) {
             console.error(error);
@@ -176,12 +257,14 @@ export default function RoadmapDetail() {
 
     const handleToggleWeekCompletion = async (weekIndex: number) => {
         const token = localStorage.getItem('token');
-        if (!token) return;
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (!token || !baseUrl || !id) return;
+        if (updatingProgress) return;
 
         const isCompleted = completedWeeks.includes(weekIndex);
         const endpoint = isCompleted
-            ? `${process.env.NEXT_PUBLIC_API_URL}/roadmap/${id}/week/${weekIndex}/incomplete`
-            : `${process.env.NEXT_PUBLIC_API_URL}/roadmap/${id}/week/${weekIndex}/complete`;
+            ? `${baseUrl}/roadmap/${id}/week/${weekIndex}/incomplete`
+            : `${baseUrl}/roadmap/${id}/week/${weekIndex}/complete`;
 
         setUpdatingProgress(true);
 
@@ -189,40 +272,46 @@ export default function RoadmapDetail() {
             const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
             });
+            const updatedPayload = await res.json().catch(() => ({}));
 
-            if (res.ok) {
-                const updatedData = await res.json();
-                const newCompletedWeeks = updatedData.data.completedWeeks || [];
-                const newProgress = updatedData.data.progress || 0;
-
-                // Update state with new values
-                setCompletedWeeks(newCompletedWeeks);
-                setData((prev: any) => ({
-                    ...prev,
-                    progress: newProgress,
-                    completedWeeks: newCompletedWeeks
-                }));
-
-                // Toast notification
-                if (newProgress === 100) {
-                    toast.success('🎉 Congratulations! You completed the roadmap!');
-                } else if (isCompleted) {
-                    toast.success(`Week ${weekIndex + 1} marked as incomplete`);
-                } else {
-                    toast.success(`Week ${weekIndex + 1} completed! Progress: ${newProgress}%`);
-                }
-
-                // Trigger readiness score refresh after a short delay
-                setTimeout(() => {
-                    fetchReadinessData();
-                }, 500);
-            } else {
-                toast.error('Failed to update week status');
+            if (!res.ok) {
+                const msg =
+                    typeof updatedPayload?.message === 'string'
+                        ? updatedPayload.message
+                        : 'Failed to update week status';
+                toast.error(msg);
+                return;
             }
+
+            const doc = updatedPayload?.data ?? updatedPayload;
+            const newCompletedWeeks = Array.isArray(doc?.completedWeeks) ? doc.completedWeeks : [];
+            const newProgress = typeof doc?.progress === 'number' ? doc.progress : 0;
+
+            setCompletedWeeks(newCompletedWeeks);
+            setData((prev: any) =>
+                prev
+                    ? {
+                          ...prev,
+                          progress: newProgress,
+                          completedWeeks: newCompletedWeeks,
+                      }
+                    : prev,
+            );
+
+            if (newProgress === 100) {
+                toast.success('Congratulations! You completed the roadmap!');
+            } else if (isCompleted) {
+                toast.success(`Week ${weekIndex + 1} marked as incomplete`);
+            } else {
+                toast.success(`Week ${weekIndex + 1} completed! Progress: ${newProgress}%`);
+            }
+
+            setReadinessNonce((n) => n + 1);
+            setTimeout(() => fetchReadinessData(), 400);
         } catch (error) {
             console.error('Error updating progress:', error);
             toast.error('An error occurred while updating progress');
@@ -251,15 +340,66 @@ export default function RoadmapDetail() {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-background flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
+        <div className="min-h-screen bg-background relative overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(6,182,212,0.12),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(6,182,212,0.08),transparent)]" />
+            <div className="container max-w-7xl mx-auto px-4 py-8 md:py-12 relative">
+                <div className="h-12 w-40 rounded-lg bg-muted animate-pulse mb-8" />
+                <div className="rounded-2xl sm:rounded-3xl border border-border/50 bg-card/40 p-6 sm:p-8 space-y-6 animate-pulse">
+                    <div className="h-8 w-3/4 max-w-md rounded-lg bg-muted" />
+                    <div className="h-4 w-full max-w-2xl rounded bg-muted/70" />
+                    <div className="h-4 w-5/6 max-w-xl rounded bg-muted/70" />
+                    <div className="h-3 w-full max-w-lg rounded-full bg-muted mt-8" />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+                        <div className="h-24 rounded-xl bg-muted/80" />
+                        <div className="h-24 rounded-xl bg-muted/80" />
+                        <div className="h-24 rounded-xl bg-muted/80" />
+                    </div>
+                </div>
+                <div className="mt-10 h-14 rounded-xl bg-muted/60 animate-pulse" />
+                <div className="mt-6 h-64 rounded-xl bg-muted/40 animate-pulse" />
+            </div>
+        </div>
+    );
+
+    if (loadError) return (
+        <div className="min-h-[70vh] bg-background flex items-center justify-center px-4 relative overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(6,182,212,0.08),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(139,92,246,0.06),transparent_50%)]" />
+            <div className="relative text-center max-w-md space-y-6 p-8 rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-xl">
+                <p className="text-sm text-muted-foreground">{loadError}</p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button variant="outline" onClick={() => router.back()} className="gap-2">
+                        <ChevronLeft className="w-4 h-4" /> Go back
+                    </Button>
+                    <Button onClick={() => setFetchVersion((v) => v + 1)}>Try again</Button>
+                </div>
+            </div>
         </div>
     );
 
     if (!data) return (
-        <div className="min-h-screen bg-background flex items-center justify-center flex-col gap-4">
-            <h1 className="text-2xl font-bold text-foreground">Roadmap not found</h1>
-            <Button variant="outline" onClick={() => router.back()}>Go Back</Button>
+        <div className="min-h-[70vh] bg-background flex items-center justify-center px-4 relative overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(6,182,212,0.08),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(139,92,246,0.06),transparent_50%)]" />
+            <div className="relative text-center max-w-md space-y-6 p-8 rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-xl">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-muted border border-border">
+                    <GraduationCap className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <div className="space-y-2">
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">Roadmap not found</h1>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                        This roadmap may have been removed or the link is invalid. Return to your dashboard to see your plans.
+                    </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button variant="outline" onClick={() => router.back()} className="gap-2">
+                        <ChevronLeft className="w-4 h-4" /> Go back
+                    </Button>
+                    <Button asChild className="gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border-0">
+                        <Link href="/dashboard">
+                            <LayoutDashboard className="w-4 h-4" /> Dashboard
+                        </Link>
+                    </Button>
+                </div>
+            </div>
         </div>
     );
 
@@ -442,237 +582,321 @@ export default function RoadmapDetail() {
         ];
     };
 
-    return (
-        <div className="min-h-screen bg-background text-foreground transition-colors duration-300 relative overflow-hidden">
-            {/* Background Effects */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/10 dark:bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none -z-10" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-600/10 dark:bg-blue-600/5 rounded-full blur-[100px] pointer-events-none -z-10" />
+    const progressPct = Math.min(100, Math.max(0, data.progress || 0));
 
-            {/* Navigation */}
-            <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border transition-all">
-                <div className="container max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-                    <button
-                        onClick={() => router.back()}
-                        className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors"
-                    >
-                        <ArrowRight className="w-4 h-4 rotate-180" /> Back
-                    </button>
-                    <div className="hidden md:flex items-center gap-2 text-sm font-semibold text-foreground/80">
-                        {data.targetCompany && <Badge variant="secondary" className="bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800">{data.targetCompany}</Badge>}
-                        <span>{data.careerGoal}</span>
-                    </div>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowDeleteDialog(true)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950 gap-2"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                        <span className="text-xs md:text-sm">Delete</span>
-                    </Button>
-                </div>
+    return (
+        <div className="min-h-screen bg-background text-foreground transition-colors duration-300 relative overflow-x-hidden pb-8 md:pb-12">
+            {/* Layered background */}
+            <div className="pointer-events-none fixed inset-0 -z-10">
+                <div className="absolute top-0 right-0 w-[min(100%,32rem)] h-[32rem] bg-cyan-500/[0.07] dark:bg-cyan-500/[0.04] rounded-full blur-[120px]" />
+                <div className="absolute bottom-0 left-0 w-[min(100%,28rem)] h-[28rem] bg-violet-500/[0.06] dark:bg-violet-500/[0.03] rounded-full blur-[100px]" />
             </div>
 
-            <div className="container py-8 md:py-12 max-w-7xl mx-auto px-4 md:px-6 relative z-10">
-                {/* Header Section */}
-                <div className="mb-10 md:mb-14 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <div>
-                        <div className="flex items-center gap-2 mb-4">
-                            <Badge variant="outline" className="border-cyan-500/30 text-cyan-600 dark:text-cyan-400 bg-cyan-500/5 px-3 py-1">
-                                {data.isResumeBased ? '📄 Resume-Based' : '🎯 Industry Standard'}
-                            </Badge>
-                            {!data.isResumeBased && (
-                                <Badge variant="outline" className="border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/5 px-3 py-1">
-                                    General Roadmap
-                                </Badge>
-                            )}
+            {/* Navigation */}
+            <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
+                <div className="container max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+                    <div className="flex h-14 sm:h-16 items-center justify-between gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2 min-w-0 shrink">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => router.back()}
+                                className="h-9 px-2 sm:px-3 text-muted-foreground hover:text-foreground gap-1.5 shrink-0"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                                <span className="hidden min-[380px]:inline">Back</span>
+                            </Button>
+                            <Button variant="ghost" size="sm" asChild className="hidden sm:flex h-9 px-2 text-muted-foreground hover:text-foreground gap-1.5">
+                                <Link href="/dashboard">
+                                    <LayoutDashboard className="w-4 h-4" />
+                                    Dashboard
+                                </Link>
+                            </Button>
                         </div>
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-                            <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">{data.careerGoal}</span>
-                            {data.targetCompany && <span className="block text-2xl md:text-3xl mt-2 font-medium text-muted-foreground">at <span className="text-cyan-600 dark:text-cyan-400">{data.targetCompany}</span></span>}
-                        </h1>
-                        <p className="text-lg text-muted-foreground max-w-3xl leading-relaxed">
-                            {data.isResumeBased
-                                ? 'A tailored path designed to take you from your current skills to your dream career.'
-                                : 'A general industry-standard roadmap based on market research. ' + (data.targetCompany ? `Customized for ${data.targetCompany}.` : '')
-                            }
-                        </p>
-
-                        {!data.isResumeBased && (
-                            <div className="mt-6 p-4 bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-800/50 rounded-lg">
-                                <p className="text-sm text-blue-700 dark:text-blue-300">
-                                    <span className="font-semibold">💡 Tip:</span> Upload your resume to get personalized skill gap analysis and readiness scoring.
-                                </p>
+                        <div className="flex-1 min-w-0 flex justify-center px-1">
+                            <div className="hidden md:flex items-center gap-2 text-sm font-medium text-foreground/90 max-w-[50%] lg:max-w-none">
+                                {data.targetCompany && (
+                                    <Badge variant="secondary" className="shrink-0 bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-200/60 dark:border-cyan-800/60">
+                                        {data.targetCompany}
+                                    </Badge>
+                                )}
+                                <span className="truncate">{data.careerGoal}</span>
                             </div>
-                        )}
-
-                        {/* Progress Bar */}
-                        <div className="mt-6 max-w-2xl">
-                            <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm font-semibold text-muted-foreground">Your Progress</p>
-                                <span className="text-2xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-400 dark:to-blue-400 bg-clip-text text-transparent">{data.progress || 0}%</span>
-                            </div>
-                            <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner">
-                                <div
-                                    className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-full transition-all duration-500 shadow-lg shadow-cyan-500/40"
-                                    style={{ width: `${data.progress || 0}%` }}
-                                />
-                            </div>
-                            <div className="flex justify-between mt-2 text-xs text-muted-foreground font-medium">
-                                <span>{completedWeeks.length} weeks completed</span>
-                                <span>{weeklyPlan.length} weeks total</span>
-                            </div>
-                            {data.progress === 100 && (
-                                <div className="mt-3 p-3 rounded-lg bg-emerald-500/10 border border-emerald-400/30 flex items-center gap-2">
-                                    <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-                                    <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Roadmap Completed! Great job! 🎉</p>
-                                </div>
-                            )}
+                            <p className="md:hidden text-xs sm:text-sm font-semibold text-foreground/90 truncate text-center max-w-[min(100%,14rem)] sm:max-w-xs">
+                                {data.careerGoal}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                            <Button variant="ghost" size="icon" className="sm:hidden h-9 w-9 text-muted-foreground" asChild>
+                                <Link href="/dashboard" aria-label="Dashboard">
+                                    <LayoutDashboard className="w-4 h-4" />
+                                </Link>
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowDeleteDialog(true)}
+                                className="h-9 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/80 gap-1.5 px-2 sm:px-3"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                <span className="hidden sm:inline text-sm">Delete</span>
+                            </Button>
                         </div>
                     </div>
+                </div>
+            </header>
 
-                    {/* Status Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {/* Coaching Message & Resume Analysis */}
-                        {data.resumeAnalysis && (
-                            <Card className="md:col-span-2 glass-panel border-[#0D5CDF]/20 dark:border-[#0D5CDF]/10 neo-glow relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#0D5CDF]/5 rounded-full blur-3xl group-hover:bg-[#0D5CDF]/10 transition-colors duration-500" />
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2 text-xl text-[#0D5CDF] dark:text-[#4A90E2]">
-                                        <div className="p-2 bg-[#0D5CDF]/10 rounded-lg">
-                                            <Lightbulb className="w-5 h-5" />
-                                        </div>
-                                        Your AI Coaching Analysis
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
-                                    {/* Resume Analysis */}
-                                    <div>
-                                        <div className="inline-block mb-3">
-                                            <Badge className="bg-[#0D5CDF] hover:bg-[#0D5CDF]/90 text-white border-none shadow-lg shadow-blue-500/20 px-3 py-1">
-                                                {data.resumeAnalysis.detectedType?.replace(/-/g, ' ').toUpperCase() || 'ANALYZED'} PROFILE
+            <div className="container py-6 sm:py-8 md:py-12 max-w-7xl mx-auto px-3 sm:px-4 md:px-6 relative z-10">
+                {/* Hero */}
+                <section className="mb-10 md:mb-14 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-border/60 bg-gradient-to-br from-card/95 via-card/60 to-background/90 shadow-lg shadow-black/[0.03] dark:shadow-black/20">
+                        <div className="pointer-events-none absolute -top-24 -right-20 h-56 w-56 rounded-full bg-cyan-500/15 blur-3xl sm:h-72 sm:w-72" />
+                        <div className="pointer-events-none absolute -bottom-16 -left-12 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
+                        <div className="relative p-5 sm:p-8 md:p-10 lg:p-12">
+                            <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-12">
+                                <div className="min-w-0 flex-1 space-y-5">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Badge variant="outline" className="border-cyan-500/35 text-cyan-700 dark:text-cyan-400 bg-cyan-500/[0.06] px-3 py-1 text-xs font-semibold tracking-wide">
+                                            <Sparkles className="w-3 h-3 mr-1 inline opacity-80" />
+                                            {data.isResumeBased ? 'Resume-based' : 'Industry standard'}
+                                        </Badge>
+                                        {!data.isResumeBased && (
+                                            <Badge variant="outline" className="border-amber-500/35 text-amber-700 dark:text-amber-400 bg-amber-500/[0.06] px-3 py-1 text-xs">
+                                                General roadmap
                                             </Badge>
-                                        </div>
-                                        <p className="text-base text-foreground/90 font-medium leading-relaxed">
-                                            {data.resumeAnalysis.currentBackground}
+                                        )}
+                                    </div>
+                                    <div className="space-y-3">
+                                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-bold tracking-tight leading-[1.1]">
+                                            <span className="text-gradient">{data.careerGoal}</span>
+                                        </h1>
+                                        {data.targetCompany && (
+                                            <p className="text-lg sm:text-xl md:text-2xl font-medium text-muted-foreground">
+                                                at <span className="text-cyan-600 dark:text-cyan-400">{data.targetCompany}</span>
+                                            </p>
+                                        )}
+                                        <p className="text-base sm:text-lg text-muted-foreground max-w-2xl leading-relaxed pt-1">
+                                            {data.isResumeBased
+                                                ? 'A tailored path from your current skills toward your target role.'
+                                                : 'A market-informed roadmap to guide your preparation.' +
+                                                  (data.targetCompany ? ` Framed for ${data.targetCompany}.` : '')}
                                         </p>
                                     </div>
 
-                                    {/* Coaching Message */}
-                                    {data.coachingMessage && (
-                                        <div className="space-y-4 pt-4 border-t border-white/10 dark:border-white/5">
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <div className="p-4 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-xl border border-emerald-500/20 dark:border-emerald-500/10 hover:border-emerald-500/40 transition-colors group/item">
-                                                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                                                        <CheckCircle2 className="w-3.5 h-3.5" />
-                                                        Competitive Edge
-                                                    </p>
-                                                    <p className="text-sm text-foreground/80 leading-relaxed font-medium">{data.coachingMessage.goodNews}</p>
-                                                </div>
-                                                <div className="p-4 bg-amber-500/5 dark:bg-amber-500/10 rounded-xl border border-amber-500/20 dark:border-amber-500/10 hover:border-amber-500/40 transition-colors group/item">
-                                                    <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                                                        <Zap className="w-3.5 h-3.5" />
-                                                        Primary Focus
-                                                    </p>
-                                                    <p className="text-sm text-foreground/80 leading-relaxed font-medium">{data.coachingMessage.challenge}</p>
-                                                </div>
-                                            </div>
-                                            <div className="p-4 bg-[#0D5CDF]/5 dark:bg-[#0D5CDF]/10 rounded-xl border border-[#0D5CDF]/20 dark:border-[#0D5CDF]/10">
-                                                <p className="text-xs font-bold text-[#0D5CDF] dark:text-[#4A90E2] uppercase tracking-widest mb-1">Expected Timeline</p>
-                                                <p className="text-lg font-bold bg-gradient-to-r from-[#0D5CDF] to-[#00D2FF] bg-clip-text text-transparent">
-                                                    {data.coachingMessage.timelineReality}
-                                                </p>
-                                            </div>
+                                    {!data.isResumeBased && (
+                                        <div className="rounded-xl border border-blue-200/60 dark:border-blue-800/50 bg-blue-50/60 dark:bg-blue-950/35 px-4 py-3 text-sm text-blue-900 dark:text-blue-200 leading-snug">
+                                            <span className="font-semibold">Tip:</span> Upload your resume for personalized skill gaps and readiness scoring.
                                         </div>
                                     )}
-                                </CardContent>
-                            </Card>
-                        )}
 
-                        {/* Readiness Score Display */}
-                        {data.isResumeBased && (
-                            <div className={data.resumeAnalysis ? 'lg:col-span-1' : 'md:col-span-2 lg:col-span-3'}>
-                                <ReadinessScoreDisplay
-                                    roadmapId={id as string}
-                                    token={typeof window !== 'undefined' ? localStorage.getItem('token') || '' : ''}
-                                    initialScore={data.readinessScore || 0}
-                                />
+                                    <div className="max-w-xl space-y-3 pt-1">
+                                        <div className="flex items-end justify-between gap-4">
+                                            <p className="text-sm font-semibold text-foreground">Overall progress</p>
+                                            <span className="text-2xl sm:text-3xl font-bold tabular-nums text-gradient">{progressPct}%</span>
+                                        </div>
+                                        <div
+                                            className="h-3 sm:h-3.5 rounded-full bg-muted overflow-hidden ring-1 ring-border/50"
+                                            role="progressbar"
+                                            aria-valuenow={progressPct}
+                                            aria-valuemin={0}
+                                            aria-valuemax={100}
+                                        >
+                                            <div
+                                                className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-500 transition-all duration-500 ease-out shadow-[0_0_20px_-2px_rgba(6,182,212,0.45)]"
+                                                style={{ width: `${progressPct}%` }}
+                                            />
+                                        </div>
+                                        <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs sm:text-sm text-muted-foreground font-medium">
+                                            <span>{completedWeeks.length} of {weeklyPlan.length} weeks done</span>
+                                            <span className="tabular-nums">{weeklyPlan.length} weeks in plan</span>
+                                        </div>
+                                        {data.progress === 100 && (
+                                            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5 text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+                                                <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                                Roadmap complete — outstanding work.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Progress ring — desktop / tablet */}
+                                <div className="flex justify-center lg:justify-end shrink-0">
+                                    <div
+                                        className="relative grid h-36 w-36 sm:h-40 sm:w-40 place-items-center rounded-full p-[5px] shadow-lg shadow-cyan-500/10"
+                                        style={{
+                                            background: `conic-gradient(from -90deg, rgb(6 182 212) ${progressPct}%, rgb(39 39 42 / 0.25) 0)`,
+                                        }}
+                                    >
+                                        <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-card border border-border/50 text-center">
+                                            <span className="text-3xl sm:text-4xl font-bold tabular-nums text-gradient">{progressPct}%</span>
+                                            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-0.5">Done</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        )}
-
-                        {/* Right Side Stats Cards (Mobile/Tablet stacking) */}
-                        <div className={`grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4 ${data.isResumeBased ? 'lg:col-span-1' : 'md:col-span-2 lg:col-span-3'}`}>
-                            <Card className="glass-card border-blue-500/20 dark:border-blue-500/10 hover:border-blue-500/40 transition-all duration-300 group">
-                                <CardContent className="p-5 flex items-center gap-4">
-                                    <div className="p-3 bg-blue-500/10 rounded-xl group-hover:scale-110 transition-transform">
-                                        <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Duration</p>
-                                        <p className="text-xl font-bold text-foreground">{timelineToGoal}</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="glass-card border-emerald-500/20 dark:border-emerald-500/10 hover:border-emerald-500/40 transition-all duration-300 group">
-                                <CardContent className="p-5 flex items-center gap-4">
-                                    <div className="p-3 bg-emerald-500/10 rounded-xl group-hover:scale-110 transition-transform">
-                                        <BookOpen className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Lessons</p>
-                                        <p className="text-xl font-bold text-foreground">{weeklyPlan.length} Weeks</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="glass-card border-purple-500/20 dark:border-purple-500/10 hover:border-purple-500/40 transition-all duration-300 group">
-                                <CardContent className="p-5 flex items-center gap-4">
-                                    <div className="p-3 bg-purple-500/10 rounded-xl group-hover:scale-110 transition-transform">
-                                        <Trophy className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Projects</p>
-                                        <p className="text-xl font-bold text-foreground">{practiceProjects.length} Builds</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
                         </div>
                     </div>
-                </div>
+                </section>
+
+                    {/* Quick metrics — full-width row so desktop isn&apos;t left-heavy */}
+                    <section
+                        aria-label="Plan summary"
+                        className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-4 lg:gap-5 mt-4 md:mt-8"
+                    >
+                        <Card className="glass-card border-blue-500/20 dark:border-blue-500/10 hover:border-blue-500/40 transition-all duration-300 group h-full">
+                            <CardContent className="p-4 sm:p-5 flex items-center gap-4 min-h-[5.5rem]">
+                                <div className="p-3 bg-blue-500/10 rounded-xl group-hover:scale-110 transition-transform shrink-0">
+                                    <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Duration</p>
+                                    <p className="text-lg sm:text-xl font-bold text-foreground leading-snug break-words">{timelineToGoal}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="glass-card border-emerald-500/20 dark:border-emerald-500/10 hover:border-emerald-500/40 transition-all duration-300 group h-full">
+                            <CardContent className="p-4 sm:p-5 flex items-center gap-4 min-h-[5.5rem]">
+                                <div className="p-3 bg-emerald-500/10 rounded-xl group-hover:scale-110 transition-transform shrink-0">
+                                    <BookOpen className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Lessons</p>
+                                    <p className="text-lg sm:text-xl font-bold text-foreground tabular-nums">{weeklyPlan.length} weeks</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="glass-card border-violet-500/20 dark:border-violet-500/10 hover:border-violet-500/40 transition-all duration-300 group h-full">
+                            <CardContent className="p-4 sm:p-5 flex items-center gap-4 min-h-[5.5rem]">
+                                <div className="p-3 bg-purple-500/10 rounded-xl group-hover:scale-110 transition-transform shrink-0">
+                                    <Trophy className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Projects</p>
+                                    <p className="text-lg sm:text-xl font-bold text-foreground tabular-nums">{practiceProjects.length} builds</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </section>
+
+                    {/* Coaching + readiness: balanced xl grid (readiness gets width for dense UI) */}
+                    {(data.resumeAnalysis || data.isResumeBased) && (
+                        <section className="mt-8 md:mt-10 grid grid-cols-1 gap-6 xl:grid-cols-12 xl:gap-8">
+                            {data.resumeAnalysis && (
+                                <Card
+                                    className={`glass-panel border-[#0D5CDF]/20 dark:border-[#0D5CDF]/10 neo-glow relative overflow-hidden group h-fit ${data.isResumeBased ? 'xl:col-span-5' : 'xl:col-span-12'}`}
+                                >
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#0D5CDF]/5 rounded-full blur-3xl group-hover:bg-[#0D5CDF]/10 transition-colors duration-500" />
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2 text-xl text-[#0D5CDF] dark:text-[#4A90E2]">
+                                            <div className="p-2 bg-[#0D5CDF]/10 rounded-lg">
+                                                <Lightbulb className="w-5 h-5" />
+                                            </div>
+                                            Your AI Coaching Analysis
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-6">
+                                        <div>
+                                            <div className="inline-block mb-3">
+                                                <Badge className="bg-[#0D5CDF] hover:bg-[#0D5CDF]/90 text-white border-none shadow-lg shadow-blue-500/20 px-3 py-1">
+                                                    {data.resumeAnalysis.detectedType?.replace(/-/g, ' ').toUpperCase() || 'ANALYZED'} PROFILE
+                                                </Badge>
+                                            </div>
+                                            <p className="text-base text-foreground/90 font-medium leading-relaxed">
+                                                {data.resumeAnalysis.currentBackground}
+                                            </p>
+                                        </div>
+
+                                        {data.coachingMessage && (
+                                            <div className="space-y-4 pt-4 border-t border-white/10 dark:border-white/5">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div className="p-4 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-xl border border-emerald-500/20 dark:border-emerald-500/10 hover:border-emerald-500/40 transition-colors group/item">
+                                                        <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                                            Competitive Edge
+                                                        </p>
+                                                        <p className="text-sm text-foreground/80 leading-relaxed font-medium">{data.coachingMessage.goodNews}</p>
+                                                    </div>
+                                                    <div className="p-4 bg-amber-500/5 dark:bg-amber-500/10 rounded-xl border border-amber-500/20 dark:border-amber-500/10 hover:border-amber-500/40 transition-colors group/item">
+                                                        <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                                            <Zap className="w-3.5 h-3.5" />
+                                                            Primary Focus
+                                                        </p>
+                                                        <p className="text-sm text-foreground/80 leading-relaxed font-medium">{data.coachingMessage.challenge}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="p-4 bg-[#0D5CDF]/5 dark:bg-[#0D5CDF]/10 rounded-xl border border-[#0D5CDF]/20 dark:border-[#0D5CDF]/10">
+                                                    <p className="text-xs font-bold text-[#0D5CDF] dark:text-[#4A90E2] uppercase tracking-widest mb-1">Expected Timeline</p>
+                                                    <p className="text-lg font-bold bg-gradient-to-r from-[#0D5CDF] to-[#00D2FF] bg-clip-text text-transparent">
+                                                        {data.coachingMessage.timelineReality}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {data.isResumeBased && (
+                                <div
+                                    className={`min-w-0 ${data.resumeAnalysis ? 'xl:col-span-7' : 'xl:col-span-12'}`}
+                                >
+                                    <ReadinessScoreDisplay
+                                        key={`${id}-${readinessNonce}`}
+                                        roadmapId={id as string}
+                                        token={typeof window !== 'undefined' ? localStorage.getItem('token') || '' : ''}
+                                        initialScore={data.readinessScore || 0}
+                                    />
+                                </div>
+                            )}
+                        </section>
+                    )}
 
                 {/* Main Content - Tabs */}
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+                <div className="mt-10 md:mt-14 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
-                                <div className="h-8 w-1.5 bg-gradient-to-b from-purple-600 to-pink-600 rounded-full"></div>
-                                Your Learning Path
-                            </h2>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4 mb-5 md:mb-6">
+                            <div className="space-y-1 min-w-0">
+                                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
+                                    <span className="h-8 w-1.5 shrink-0 rounded-full bg-gradient-to-b from-violet-600 to-cyan-500" aria-hidden />
+                                    <span className="truncate">Your learning path</span>
+                                </h2>
+                                <p className="text-sm text-muted-foreground pl-5 sm:pl-[1.125rem] max-w-xl">
+                                    Switch between weekly tasks, gaps, milestones, and company context.
+                                </p>
+                            </div>
                         </div>
 
-                        {/* Enhanced Tab List */}
-                        <div className="overflow-x-auto pb-4 md:pb-0">
-                            <TabsList className="bg-muted/50 p-1 flex w-max md:w-full rounded-xl gap-2 h-auto">
-                                <TabsTrigger value="weekly" className="rounded-lg py-2.5 px-4 md:flex-1 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400 transition-all">
-                                    📅 Weekly Plan
-                                </TabsTrigger>
-                                <TabsTrigger value="gaps" className="rounded-lg py-2.5 px-4 md:flex-1 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-red-600 dark:data-[state=active]:text-red-400 transition-all">
-                                    🎯 Skill Gaps
-                                </TabsTrigger>
-                                <TabsTrigger value="monthly" className="rounded-lg py-2.5 px-4 md:flex-1 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 transition-all">
-                                    📊 Milestones
-                                </TabsTrigger>
-                                <TabsTrigger value="projects" className="rounded-lg py-2.5 px-4 md:flex-1 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 transition-all">
-                                    🛠️ Projects
-                                </TabsTrigger>
-                                <TabsTrigger value="resources" className="rounded-lg py-2.5 px-4 md:flex-1 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-yellow-600 dark:data-[state=active]:text-yellow-400 transition-all">
-                                    📚 Resources
-                                </TabsTrigger>
-                                <TabsTrigger value="insider" className="rounded-lg py-2.5 px-4 md:flex-1 data-[state=active]:bg-gradient-to-r from-cyan-600 to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all">
-                                    <Building2 className="w-4 h-4 mr-2" /> Company Insider
-                                </TabsTrigger>
-                            </TabsList>
+                        <div className="rounded-2xl border border-border/60 bg-muted/20 p-2 sm:p-2.5 shadow-inner">
+                            <div className="overflow-x-auto overscroll-x-contain scrollbar-thin [-ms-overflow-style:none] [scrollbar-width:thin] pb-1 sm:pb-0">
+                                <TabsList className="inline-flex h-auto min-h-[3rem] w-max min-w-full flex-nowrap gap-1.5 rounded-xl bg-muted/40 p-1.5 sm:grid sm:w-full sm:grid-cols-2 sm:gap-2 md:grid-cols-3 lg:grid-cols-6">
+                                    <TabsTrigger value="weekly" className="gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold sm:text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-cyan-600 dark:data-[state=active]:text-cyan-400 sm:flex-1">
+                                        <CalendarDays className="h-4 w-4 shrink-0 opacity-80" />
+                                        <span className="whitespace-nowrap">Weekly</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="gaps" className="gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold sm:text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-rose-600 dark:data-[state=active]:text-rose-400 sm:flex-1">
+                                        <Crosshair className="h-4 w-4 shrink-0 opacity-80" />
+                                        <span className="whitespace-nowrap">Skill gaps</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="monthly" className="gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold sm:text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 sm:flex-1">
+                                        <BarChart3 className="h-4 w-4 shrink-0 opacity-80" />
+                                        <span className="whitespace-nowrap">Milestones</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="projects" className="gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold sm:text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 sm:flex-1">
+                                        <Wrench className="h-4 w-4 shrink-0 opacity-80" />
+                                        <span className="whitespace-nowrap">Projects</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="resources" className="gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold sm:text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 sm:flex-1">
+                                        <Library className="h-4 w-4 shrink-0 opacity-80" />
+                                        <span className="whitespace-nowrap">Resources</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="insider" className="gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md sm:flex-1 sm:col-span-2 lg:col-span-1">
+                                        <Building2 className="h-4 w-4 shrink-0 opacity-90" />
+                                        <span className="whitespace-nowrap">Company insider</span>
+                                    </TabsTrigger>
+                                </TabsList>
+                            </div>
                         </div>
 
                         {/* Company Insider Tab - DYNAMIC & ENHANCED */}
@@ -908,8 +1132,8 @@ export default function RoadmapDetail() {
 
                 {/* Delete Confirmation Dialog */}
                 {showDeleteDialog && (
-                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                        <Card className="max-w-md w-full border-red-200 dark:border-red-900 shadow-lg">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                        <Card className="max-w-md w-full border-red-200/80 dark:border-red-900/80 shadow-2xl animate-in zoom-in-95 duration-200">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
                                     <Trash2 className="w-5 h-5" />
