@@ -70,7 +70,7 @@ function AuthForm() {
             }
 
             if (json.access_token) {
-                login(json.user, json.access_token);
+                login(json.user, json.access_token, json.refresh_token);
                 toast.success(type === 'login' ? '👋 Welcome back!' : '🎉 Account created successfully!');
                 setTimeout(() => {
                     router.push('/dashboard');
