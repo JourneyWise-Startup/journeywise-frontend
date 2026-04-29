@@ -16,10 +16,12 @@ import html2canvas from 'html2canvas';
 
 export default function ResumeAnalyzer() {
     const [file, setFile] = useState<File | null>(null);
+    const [jdFile, setJdFile] = useState<File | null>(null);
     const [jobDescription, setJobDescription] = useState('');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [result, setResult] = useState<any>(null);
     const [dragActive, setDragActive] = useState(false);
+    const [jdDragActive, setJdDragActive] = useState(false);
     
     // Resume Builder states
     const [activeTab, setActiveTab] = useState<'analysis' | 'market' | 'builder'>('analysis');
@@ -28,6 +30,7 @@ export default function ResumeAnalyzer() {
     const resumeRef = useRef<HTMLDivElement>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const jdFileInputRef = useRef<HTMLInputElement>(null);
     const { token } = useAuth();
     const router = useRouter();
 
@@ -72,8 +75,26 @@ export default function ResumeAnalyzer() {
         setActiveTab('analysis'); 
     };
 
+    const handleJdFileSelection = (selectedFile: File) => {
+        const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+        if (!validTypes.includes(selectedFile.type)) {
+            toast.error('Invalid JD file type. Please upload a PDF, DOCX, or TXT file.');
+            return;
+        }
+        if (selectedFile.size > 5 * 1024 * 1024) {
+            toast.error('JD File is too large. Maximum size is 5MB.');
+            return;
+        }
+        setJdFile(selectedFile);
+        setResult(null); 
+    };
+
     const triggerFileSelect = () => {
         fileInputRef.current?.click();
+    };
+
+    const triggerJdFileSelect = () => {
+        jdFileInputRef.current?.click();
     };
 
     const handleAnalyze = async () => {
@@ -94,6 +115,9 @@ export default function ResumeAnalyzer() {
             formData.append('file', file);
             if (jobDescription.trim()) {
                 formData.append('jobDescription', jobDescription);
+            }
+            if (jdFile) {
+                formData.append('jdFile', jdFile);
             }
 
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/resume/analyze`, {
@@ -362,11 +386,11 @@ export default function ResumeAnalyzer() {
                 {!result && (
                     <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                         {/* Left Col: Upload File */}
-                        <div className="space-y-6">
-                            <Card className="border-border/50 bg-card/60 backdrop-blur-xl shadow-xl hover:border-cyan-500/50 transition-all duration-300">
-                                <CardContent className="p-8 pb-10 flex flex-col items-center justify-center min-h-[320px]">
+                        <div className="flex flex-col h-full">
+                            <Card className="border-border/50 bg-card/60 backdrop-blur-xl shadow-xl hover:border-cyan-500/50 transition-all duration-300 flex-1 flex flex-col">
+                                <CardContent className="p-8 flex flex-col items-center justify-center flex-1">
                                     <div 
-                                        className={`w-full border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer ${
+                                        className={`w-full h-full border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer ${
                                             dragActive ? 'border-cyan-500 bg-cyan-500/5 scale-[1.02]' : 'border-border/60 hover:border-cyan-500/50 hover:bg-muted/30'
                                         } ${file ? 'border-emerald-500/50 bg-emerald-500/5' : ''}`}
                                         onDragEnter={handleDrag}
@@ -431,14 +455,74 @@ export default function ResumeAnalyzer() {
                                         Target Job Description <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full ml-auto">Optional</span>
                                     </h3>
                                     <p className="text-sm text-muted-foreground mb-4">
-                                        Paste the exact job description from Naukri, LinkedIn, or company portal to get an accurate Match Score and Custom Template.
+                                        Paste the exact job description from Naukri, LinkedIn, or upload a JD file to get an accurate Match Score and Custom Template.
                                     </p>
-                                    <textarea 
-                                        value={jobDescription}
-                                        onChange={(e) => setJobDescription(e.target.value)}
-                                        placeholder="Paste the requirements, responsibilities, and qualifications here..."
-                                        className="w-full flex-1 min-h-[160px] p-4 rounded-xl bg-background/50 border border-border focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 outline-none resize-none transition-all"
-                                    />
+                                    
+                                    <div className="flex-1 flex flex-col gap-3">
+                                        <textarea 
+                                            value={jobDescription}
+                                            onChange={(e) => setJobDescription(e.target.value)}
+                                            placeholder="Paste the requirements, responsibilities, and qualifications here..."
+                                            className="w-full min-h-[120px] p-4 rounded-xl bg-background/50 border border-border focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 outline-none resize-none transition-all flex-1"
+                                        />
+                                        
+                                        <div className="relative flex items-center gap-4">
+                                            <div className="flex-1 border-t border-border/50"></div>
+                                            <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">OR</span>
+                                            <div className="flex-1 border-t border-border/50"></div>
+                                        </div>
+
+                                        <div 
+                                            className={`w-full border border-dashed rounded-xl p-4 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer ${
+                                                jdDragActive ? 'border-blue-500 bg-blue-500/5' : 'border-border/60 hover:border-blue-500/50 hover:bg-muted/30'
+                                            } ${jdFile ? 'border-emerald-500/50 bg-emerald-500/5' : ''}`}
+                                            onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setJdDragActive(true); }}
+                                            onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setJdDragActive(false); }}
+                                            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setJdDragActive(true); }}
+                                            onDrop={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setJdDragActive(false);
+                                                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                                    handleJdFileSelection(e.dataTransfer.files[0]);
+                                                }
+                                            }}
+                                            onClick={triggerJdFileSelect}
+                                        >
+                                            <input
+                                                ref={jdFileInputRef}
+                                                type="file"
+                                                className="hidden"
+                                                accept=".pdf,.docx,.txt"
+                                                onChange={(e) => {
+                                                    e.preventDefault();
+                                                    if (e.target.files && e.target.files[0]) {
+                                                        handleJdFileSelection(e.target.files[0]);
+                                                    }
+                                                }}
+                                            />
+                                            
+                                            {jdFile ? (
+                                                <div className="flex items-center justify-between w-full px-2">
+                                                    <div className="flex items-center gap-3 overflow-hidden">
+                                                        <FileText className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                                                        <p className="font-medium text-sm text-foreground truncate">{jdFile.name}</p>
+                                                    </div>
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); setJdFile(null); }}
+                                                        className="text-muted-foreground hover:text-red-400 transition-colors p-1"
+                                                    >
+                                                        <XCircle className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-3">
+                                                    <UploadCloud className="w-5 h-5 text-blue-500" />
+                                                    <p className="text-sm text-foreground font-medium">Upload JD File (PDF, DOCX)</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </div>
